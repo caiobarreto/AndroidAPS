@@ -2,6 +2,7 @@ package info.nightscout.androidaps.plugins.pump.common.sync
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.thoughtworks.xstream.security.AnyTypePermission
 import com.thoughtworks.xstream.XStream
 import info.nightscout.androidaps.data.DetailedBolusInfo
 import info.nightscout.androidaps.interfaces.PumpSync
@@ -44,7 +45,8 @@ class PumpSyncStorage @Inject constructor(
         if (sp.contains(pumpSyncStorageKey)) {
             val jsonData: String = sp.getString(pumpSyncStorageKey, "");
 
-            if (!jsonData.isBlank()) {
+            if (jsonData.isNotBlank()) {
+                xstream.addPermission(AnyTypePermission.ANY)
                 pumpSyncStorage = xstream.fromXML(jsonData, MutableMap::class.java) as MutableMap<String, MutableList<PumpDbEntry>>
 
                 aapsLogger.debug(LTag.PUMP, String.format("Loading Pump Sync Storage: boluses=%d, tbrs=%d.", pumpSyncStorage[BOLUS]!!.size, pumpSyncStorage[TBR]!!.size))
