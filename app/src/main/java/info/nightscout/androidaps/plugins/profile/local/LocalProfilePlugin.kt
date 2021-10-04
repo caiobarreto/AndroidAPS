@@ -8,6 +8,7 @@ import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.Constants
 import info.nightscout.androidaps.R
+import info.nightscout.androidaps.annotations.OpenForTesting
 import info.nightscout.androidaps.data.ProfileSealed
 import info.nightscout.androidaps.data.PureProfile
 import info.nightscout.androidaps.events.EventProfileStoreChanged
@@ -35,6 +36,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.collections.ArrayList
 
+@OpenForTesting
 @Singleton
 class LocalProfilePlugin @Inject constructor(
     injector: HasAndroidInjector,
@@ -146,15 +148,17 @@ class LocalProfilePlugin @Inject constructor(
     fun storeSettings(activity: FragmentActivity? = null) {
         for (i in 0 until numOfProfiles) {
             profiles[i].run {
-                val localProfileNumbered = Constants.LOCAL_PROFILE + "_" + i + "_"
-                sp.putString(localProfileNumbered + "name", name!!)
-                sp.putBoolean(localProfileNumbered + "mgdl", mgdl)
-                sp.putDouble(localProfileNumbered + "dia", dia)
-                sp.putString(localProfileNumbered + "ic", ic.toString())
-                sp.putString(localProfileNumbered + "isf", isf.toString())
-                sp.putString(localProfileNumbered + "basal", basal.toString())
-                sp.putString(localProfileNumbered + "targetlow", targetLow.toString())
-                sp.putString(localProfileNumbered + "targethigh", targetHigh.toString())
+                name?.let { name ->
+                    val localProfileNumbered = Constants.LOCAL_PROFILE + "_" + i + "_"
+                    sp.putString(localProfileNumbered + "name", name)
+                    sp.putBoolean(localProfileNumbered + "mgdl", mgdl)
+                    sp.putDouble(localProfileNumbered + "dia", dia)
+                    sp.putString(localProfileNumbered + "ic", ic.toString())
+                    sp.putString(localProfileNumbered + "isf", isf.toString())
+                    sp.putString(localProfileNumbered + "basal", basal.toString())
+                    sp.putString(localProfileNumbered + "targetlow", targetLow.toString())
+                    sp.putString(localProfileNumbered + "targethigh", targetHigh.toString())
+                }
             }
         }
         sp.putInt(Constants.LOCAL_PROFILE + "_profiles", numOfProfiles)

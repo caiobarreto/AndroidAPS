@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import dagger.android.HasAndroidInjector
+import info.nightscout.androidaps.annotations.OpenForTesting
 import info.nightscout.androidaps.automation.R
 import info.nightscout.androidaps.events.*
 import info.nightscout.androidaps.interfaces.Config
@@ -38,6 +39,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.collections.ArrayList
 
+@OpenForTesting
 @Singleton
 class AutomationPlugin @Inject constructor(
     injector: HasAndroidInjector,
@@ -309,6 +311,7 @@ class AutomationPlugin @Inject constructor(
             TriggerCOB(injector),
             TriggerProfilePercent(injector),
             TriggerTempTarget(injector),
+            TriggerTempTargetValue(injector),
             TriggerWifiSsid(injector),
             TriggerLocation(injector),
             TriggerAutosensValue(injector),
