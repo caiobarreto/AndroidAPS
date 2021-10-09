@@ -81,6 +81,7 @@
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
     <string name="disconnecting">Disconnecting</string>
+    <string name="waiting_for_disconnection">Waiting for disconnection</string>
     <string name="androidaps_start">AndroidAPS started</string>
     <string name="formatinsulinunits1">%1$.1f U</string>
     <string name="formatinsulinunits">%1$.2f U</string>
@@ -289,6 +290,8 @@
     <string name="loop">Loop</string>
     <string name="ns">NS</string>
     <string name="record">Record</string>
+    <string name="reading_pump_history">Reading pump history</string>
+    <string name="pump_icon">Pump icon</string>
 
     <!--    Command-->
     <string name="connectiontimedout">Connection timed out</string>
@@ -493,6 +496,7 @@
     <string name="valueoutofrange">»%1$s« is out of hard limits</string>
     <string name="value_out_of_hard_limits">»%1$s« %2$.2f is out of hard limits</string>
     <string name="basal_value">Basal value</string>
+    <string name="nsclient_version_does_not_match">NSClient version doesn\'t match to AndroidAPS. Please update.</string>
 
     <plurals name="days">
         <item quantity="one">%1$d day</item>
