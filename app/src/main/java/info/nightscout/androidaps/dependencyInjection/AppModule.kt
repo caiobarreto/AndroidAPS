@@ -11,7 +11,7 @@ import info.nightscout.androidaps.database.AppRepository
 import info.nightscout.androidaps.interfaces.*
 import info.nightscout.androidaps.logging.AAPSLogger
 import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin
-import info.nightscout.androidaps.plugins.bus.RxBusWrapper
+import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.configBuilder.ConfigBuilderPlugin
 import info.nightscout.androidaps.plugins.configBuilder.PluginStore
 import info.nightscout.androidaps.plugins.configBuilder.ProfileFunctionImplementation
@@ -23,6 +23,7 @@ import info.nightscout.androidaps.plugins.iob.iobCobCalculator.IobCobCalculatorP
 import info.nightscout.androidaps.plugins.pump.PumpSyncImplementation
 import info.nightscout.androidaps.queue.CommandQueue
 import info.nightscout.androidaps.utils.DateUtil
+import info.nightscout.androidaps.utils.FabricPrivacy
 import info.nightscout.androidaps.utils.HardLimits
 import info.nightscout.androidaps.utils.androidNotification.NotificationHolderImpl
 import info.nightscout.androidaps.utils.buildHelper.BuildHelper
@@ -72,13 +73,14 @@ open class AppModule {
     @Provides
     @Singleton
     fun provideProfileFunction(
-        aapsLogger: AAPSLogger, sp: SP, rxBus: RxBusWrapper, resourceHelper:
+        aapsLogger: AAPSLogger, sp: SP, rxBus: RxBus, resourceHelper:
         ResourceHelper, activePlugin:
-        ActivePlugin, repository: AppRepository, dateUtil: DateUtil, config: Config, hardLimits: HardLimits
+        ActivePlugin, repository: AppRepository, dateUtil: DateUtil, config: Config, hardLimits: HardLimits,
+        aapsSchedulers: AapsSchedulers, fabricPrivacy: FabricPrivacy
     ): ProfileFunction =
         ProfileFunctionImplementation(
             aapsLogger, sp, rxBus, resourceHelper, activePlugin, repository, dateUtil,
-            config, hardLimits
+            config, hardLimits, aapsSchedulers, fabricPrivacy
         )
 
     @Module
