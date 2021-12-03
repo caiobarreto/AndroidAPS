@@ -15,6 +15,7 @@ import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin
 import info.nightscout.androidaps.plugins.aps.openAPSAMA.OpenAPSAMAPlugin
 import info.nightscout.androidaps.plugins.aps.openAPSSMB.OpenAPSSMBPlugin
 import info.nightscout.androidaps.plugins.configBuilder.ConfigBuilderPlugin
+import info.nightscout.androidaps.plugins.constraints.bgQualityCheck.BgQualityCheckPlugin
 import info.nightscout.androidaps.plugins.constraints.dstHelper.DstHelperPlugin
 import info.nightscout.androidaps.plugins.constraints.objectives.ObjectivesPlugin
 import info.nightscout.androidaps.plugins.constraints.safety.SafetyPlugin
@@ -58,6 +59,12 @@ abstract class PluginsModule {
     @AllConfigs
     @IntoMap
     @IntKey(0)
+    abstract fun bindPersistentNotificationPlugin(plugin: PersistentNotificationPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(5)
     abstract fun bindOverviewPlugin(plugin: OverviewPlugin): PluginBase
 
     @Binds
@@ -273,12 +280,6 @@ abstract class PluginsModule {
     @Binds
     @AllConfigs
     @IntoMap
-    @IntKey(350)
-    abstract fun bindPersistentNotificationPlugin(plugin: PersistentNotificationPlugin): PluginBase
-
-    @Binds
-    @AllConfigs
-    @IntoMap
     @IntKey(360)
     abstract fun bindNSClientPlugin(plugin: NSClientPlugin): PluginBase
 
@@ -293,6 +294,12 @@ abstract class PluginsModule {
     @IntoMap
     @IntKey(380)
     abstract fun bindDstHelperPlugin(plugin: DstHelperPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(381)
+    abstract fun bindBgQualityCheckPlugin(plugin: BgQualityCheckPlugin): PluginBase
 
     @Binds
     @AllConfigs
@@ -346,6 +353,12 @@ abstract class PluginsModule {
     @AllConfigs
     @IntoMap
     @IntKey(470)
+    abstract fun bindGlunovoPlugin(plugin: GlunovoPlugin): PluginBase
+
+    @Binds
+    @AllConfigs
+    @IntoMap
+    @IntKey(475)
     abstract fun bindRandomBgPlugin(plugin: RandomBgPlugin): PluginBase
 
     // @Binds

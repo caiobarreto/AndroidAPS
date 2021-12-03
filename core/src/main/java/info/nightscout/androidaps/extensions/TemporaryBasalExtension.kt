@@ -62,7 +62,7 @@ fun TemporaryBasal.toStringFull(profile: Profile, dateUtil: DateUtil): String {
     }
 }
 
-fun TemporaryBasal.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil, useAbsolute: Boolean): JSONObject =
+fun TemporaryBasal.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil): JSONObject =
     JSONObject()
         .put("created_at", dateUtil.toISOString(timestamp))
         .put("enteredBy", "openaps://" + "AndroidAPS")
@@ -72,9 +72,9 @@ fun TemporaryBasal.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil, 
         .put("durationInMilliseconds", duration) // rounded duration leads to different basal IOB
         .put("rate", rate)
         .put("type", type.name)
+        .put("isAbsolute", isAbsolute)
+        .put("absolute", convertedToAbsolute(timestamp, profile))
         .also {
-            if (useAbsolute) it.put("absolute", convertedToAbsolute(timestamp, profile))
-            else it.put("percent", convertedToPercent(timestamp, profile) - 100)
             if (interfaceIDs.pumpId != null) it.put("pumpId", interfaceIDs.pumpId)
             if (interfaceIDs.endId != null) it.put("endId", interfaceIDs.endId)
             if (interfaceIDs.pumpType != null) it.put("pumpType", interfaceIDs.pumpType!!.name)
@@ -82,21 +82,11 @@ fun TemporaryBasal.toJson(isAdd: Boolean, profile: Profile, dateUtil: DateUtil, 
             if (isAdd && interfaceIDs.nightscoutId != null) it.put("_id", interfaceIDs.nightscoutId)
         }
 
-/*
-        create fake object with nsID and isValid == false
- */
-fun temporaryBasalFromNsIdForInvalidating(nsId: String): TemporaryBasal =
-    temporaryBasalFromJson(
-        JSONObject()
-            .put("mills", 1)
-            .put("absolute", 1.0)
-            .put("duration", 1.0)
-            .put("_id", nsId)
-            .put("isValid", false)
-    )!!
-
+@Suppress("IfThenToElvis")
 fun temporaryBasalFromJson(jsonObject: JSONObject): TemporaryBasal? {
     val timestamp = JsonHelper.safeGetLongAllowNull(jsonObject, "mills", null) ?: return null
+    var rate = JsonHelper.safeGetDoubleAllowNull(jsonObject, "rate")
+    var isAbsolute = JsonHelper.safeGetBooleanAllowNull(jsonObject, "isAbsolute")
     val percent = JsonHelper.safeGetDoubleAllowNull(jsonObject, "percent")
     val absolute = JsonHelper.safeGetDoubleAllowNull(jsonObject, "absolute")
     val duration = JsonHelper.safeGetLongAllowNull(jsonObject, "duration") ?: return null
@@ -109,7 +99,16 @@ fun temporaryBasalFromJson(jsonObject: JSONObject): TemporaryBasal? {
     val pumpType = InterfaceIDs.PumpType.fromString(JsonHelper.safeGetStringAllowNull(jsonObject, "pumpType", null))
     val pumpSerial = JsonHelper.safeGetStringAllowNull(jsonObject, "pumpSerial", null)
 
-    val rate = if (percent != null) percent + 100 else absolute ?: return null
+    if (rate == null) {
+        if (absolute != null)  {
+            rate = absolute
+            isAbsolute = true
+        } else if (percent != null) {
+            rate = percent + 100
+            isAbsolute = false
+        } else return null
+    }
+    if (isAbsolute == null) return null
     if (duration == 0L) return null
     if (timestamp == 0L) return null
 
@@ -118,7 +117,7 @@ fun temporaryBasalFromJson(jsonObject: JSONObject): TemporaryBasal? {
         rate = rate,
         duration = durationInMilliseconds ?: T.mins(duration).msecs(),
         type = type,
-        isAbsolute = percent == null,
+        isAbsolute = isAbsolute,
         isValid = isValid
     ).also {
         it.interfaceIDs.nightscoutId = id
@@ -135,14 +134,14 @@ fun TemporaryBasal.toStringShort(): String =
 
 fun TemporaryBasal.iobCalc(time: Long, profile: Profile, insulinInterface: Insulin): IobTotal {
     val result = IobTotal(time)
-    val realDuration: Int = getPassedDurationToTimeInMinutes(time)
+    val realDuration = getPassedDurationToTimeInMinutes(time)
     var netBasalAmount = 0.0
     if (realDuration > 0) {
         var netBasalRate: Double
         val dia = profile.dia
         val diaAgo = time - dia * 60 * 60 * 1000
         val aboutFiveMinIntervals = ceil(realDuration / 5.0).toInt()
-        val tempBolusSpacing = (realDuration / aboutFiveMinIntervals).toDouble()
+        val tempBolusSpacing = realDuration / aboutFiveMinIntervals.toDouble()
         for (j in 0L until aboutFiveMinIntervals) {
             // find middle of the interval
             val calcDate = (timestamp + j * tempBolusSpacing * 60 * 1000 + 0.5 * tempBolusSpacing * 60 * 1000).toLong()
@@ -176,7 +175,7 @@ fun TemporaryBasal.iobCalc(time: Long, profile: Profile, insulinInterface: Insul
 
 fun TemporaryBasal.iobCalc(time: Long, profile: Profile, lastAutosensResult: AutosensResult, exercise_mode: Boolean, half_basal_exercise_target: Int, isTempTarget: Boolean, insulinInterface: Insulin): IobTotal {
     val result = IobTotal(time)
-    val realDuration: Double = getPassedDurationToTimeInMinutes(time).toDouble()
+    val realDuration = getPassedDurationToTimeInMinutes(time)
     var netBasalAmount = 0.0
     var sensitivityRatio = lastAutosensResult.ratio
     val normalTarget = 100.0
@@ -191,7 +190,7 @@ fun TemporaryBasal.iobCalc(time: Long, profile: Profile, lastAutosensResult: Aut
         val dia = profile.dia
         val diaAgo = time - dia * 60 * 60 * 1000
         val aboutFiveMinIntervals = ceil(realDuration / 5.0).toInt()
-        val tempBolusSpacing = realDuration / aboutFiveMinIntervals
+        val tempBolusSpacing = realDuration / aboutFiveMinIntervals.toDouble()
         for (j in 0L until aboutFiveMinIntervals) {
             // find middle of the interval
             val calcDate = (timestamp + j * tempBolusSpacing * 60 * 1000 + 0.5 * tempBolusSpacing * 60 * 1000).toLong()

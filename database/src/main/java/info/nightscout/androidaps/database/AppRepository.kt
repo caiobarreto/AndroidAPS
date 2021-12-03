@@ -436,8 +436,10 @@ import kotlin.math.roundToInt
             .subscribeOn(Schedulers.io())
             .toWrappedSingle()
 
-    fun getLastBolusRecordOfType(type: Bolus.Type): Bolus? =
+    fun getLastBolusRecordOfTypeWrapped(type: Bolus.Type): Single<ValueWrapper<Bolus>> =
         database.bolusDao.getLastBolusRecordOfType(type)
+            .subscribeOn(Schedulers.io())
+            .toWrappedSingle()
 
     fun getOldestBolusRecord(): Bolus? =
         database.bolusDao.getOldestBolusRecord()
@@ -682,6 +684,10 @@ import kotlin.math.roundToInt
         database.temporaryBasalDao.getTemporaryBasalActiveAt(timestamp)
             .subscribeOn(Schedulers.io())
             .toWrappedSingle()
+
+    fun getTemporaryBasalsDataActiveBetweenTimeAndTime(from: Long, to: Long): Single<List<TemporaryBasal>> =
+        database.temporaryBasalDao.getTemporaryBasalActiveBetweenTimeAndTime(from, to)
+            .subscribeOn(Schedulers.io())
 
     fun getTemporaryBasalsDataFromTime(timestamp: Long, ascending: Boolean): Single<List<TemporaryBasal>> =
         database.temporaryBasalDao.getTemporaryBasalDataFromTime(timestamp)
