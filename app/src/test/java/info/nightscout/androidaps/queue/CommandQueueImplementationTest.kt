@@ -137,6 +137,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         val percentageConstraint = Constraint(0)
         `when`(constraintChecker.applyBasalPercentConstraints(anyObject(), anyObject())).thenReturn(percentageConstraint)
         `when`(rh.gs(R.string.connectiontimedout)).thenReturn("Connection timed out")
+        `when`(rh.gs(R.string.formatinsulinunits)).thenReturn("%1\$.2f U")
     }
 
     @Test
@@ -297,7 +298,6 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         Assert.assertTrue(commandQueue.isCustomCommandRunning(CustomCommand1::class.java))
         Assert.assertFalse(commandQueue.isCustomCommandRunning(CustomCommand2::class.java))
         Assert.assertFalse(commandQueue.isCustomCommandRunning(CustomCommand3::class.java))
-
 
         Assert.assertEquals(1, commandQueue.size())
     }
