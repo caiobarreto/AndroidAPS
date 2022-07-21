@@ -17,8 +17,8 @@ import info.nightscout.androidaps.plugins.iob.iobCobCalculator.GlucoseStatusProv
 import info.nightscout.androidaps.utils.DateUtil
 import info.nightscout.androidaps.utils.HardLimits
 import info.nightscout.androidaps.utils.Profiler
-import info.nightscout.androidaps.utils.buildHelper.BuildHelper
-import info.nightscout.androidaps.utils.resources.ResourceHelper
+import info.nightscout.androidaps.interfaces.BuildHelper
+import info.nightscout.androidaps.interfaces.ResourceHelper
 import info.nightscout.shared.logging.AAPSLogger
 import info.nightscout.shared.sharedPreferences.SP
 import javax.inject.Inject
@@ -68,6 +68,7 @@ class OpenAPSSMBDynamicISFPlugin @Inject constructor(
             .shortName(R.string.dynisf_shortname)
             .preferencesId(R.xml.pref_openapssmbdynamicisf)
             .setDefault(false)
+            .showInList(buildHelper.isEngineeringMode() && buildHelper.isDev())
     }
 
     override fun specialEnableCondition(): Boolean = buildHelper.isEngineeringMode() && buildHelper.isDev()
