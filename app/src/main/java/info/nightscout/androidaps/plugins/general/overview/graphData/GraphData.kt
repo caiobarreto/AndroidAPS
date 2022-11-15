@@ -9,16 +9,20 @@ import com.jjoe64.graphview.series.LineGraphSeries
 import com.jjoe64.graphview.series.Series
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.interfaces.GlucoseUnit
-import info.nightscout.androidaps.interfaces.ProfileFunction
-import info.nightscout.androidaps.interfaces.ResourceHelper
 import info.nightscout.androidaps.plugins.general.overview.OverviewData
-import info.nightscout.androidaps.plugins.general.overview.graphExtensions.*
+import info.nightscout.androidaps.plugins.general.overview.graphExtensions.AreaGraphSeries
+import info.nightscout.androidaps.plugins.general.overview.graphExtensions.BolusDataPoint
+import info.nightscout.androidaps.plugins.general.overview.graphExtensions.DoubleDataPoint
+import info.nightscout.androidaps.plugins.general.overview.graphExtensions.EffectiveProfileSwitchDataPoint
+import info.nightscout.androidaps.plugins.general.overview.graphExtensions.GlucoseValueDataPoint
+import info.nightscout.androidaps.plugins.general.overview.graphExtensions.TimeAsXAxisLabelFormatter
 import info.nightscout.androidaps.utils.DefaultValueHelper
-import info.nightscout.androidaps.utils.Round
-import info.nightscout.androidaps.utils.ToastUtils
-import info.nightscout.shared.logging.AAPSLogger
-import java.util.*
+import info.nightscout.core.ui.toast.ToastUtils
+import info.nightscout.interfaces.GlucoseUnit
+import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.interfaces.utils.Round
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.shared.interfaces.ResourceHelper
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.max
@@ -56,7 +60,7 @@ class GraphData(
         addSeries(overviewData.bgReadingGraphSeries)
         if (addPredictions) addSeries(overviewData.predictionsGraphSeries)
         overviewData.bgReadingGraphSeries.setOnDataPointTapListener { _, dataPoint ->
-            if (dataPoint is GlucoseValueDataPoint) ToastUtils.showToastInUiThread(context, dataPoint.label)
+            if (dataPoint is GlucoseValueDataPoint) ToastUtils.infoToast(context, dataPoint.label)
         }
     }
 
@@ -93,14 +97,14 @@ class GraphData(
         maxY = maxOf(maxY, overviewData.maxTreatmentsValue)
         addSeries(overviewData.treatmentsSeries)
         overviewData.treatmentsSeries.setOnDataPointTapListener { _, dataPoint ->
-            if (dataPoint is BolusDataPoint) ToastUtils.showToastInUiThread(context, dataPoint.label)
+            if (dataPoint is BolusDataPoint) ToastUtils.infoToast(context, dataPoint.label)
         }
     }
 
     fun addEps(context: Context?, scale: Double) {
         addSeries(overviewData.epsSeries)
         overviewData.epsSeries.setOnDataPointTapListener { _, dataPoint ->
-            if (dataPoint is EffectiveProfileSwitchDataPoint) ToastUtils.showToastInUiThread(context, dataPoint.data.originalCustomizedName)
+            if (dataPoint is EffectiveProfileSwitchDataPoint) ToastUtils.infoToast(context, dataPoint.data.originalCustomizedName)
         }
         overviewData.epsScale.multiplier = maxY * scale / overviewData.maxEpsValue
     }

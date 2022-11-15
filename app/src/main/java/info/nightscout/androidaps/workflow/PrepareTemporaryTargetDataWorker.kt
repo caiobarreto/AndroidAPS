@@ -1,7 +1,6 @@
 package info.nightscout.androidaps.workflow
 
 import android.content.Context
-import androidx.core.content.ContextCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -9,17 +8,18 @@ import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.database.AppRepository
-import info.nightscout.androidaps.database.ValueWrapper
 import info.nightscout.androidaps.extensions.target
-import info.nightscout.androidaps.interfaces.Loop
-import info.nightscout.androidaps.interfaces.Profile
-import info.nightscout.androidaps.interfaces.ProfileFunction
-import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.general.overview.OverviewData
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.events.EventIobCalculationProgress
-import info.nightscout.androidaps.receivers.DataWorker
-import info.nightscout.androidaps.interfaces.ResourceHelper
+import info.nightscout.androidaps.receivers.DataWorkerStorage
+import info.nightscout.core.profile.fromMgdlToUnits
+import info.nightscout.database.impl.AppRepository
+import info.nightscout.database.impl.ValueWrapper
+import info.nightscout.interfaces.aps.Loop
+import info.nightscout.interfaces.profile.Profile
+import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.shared.interfaces.ResourceHelper
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -28,7 +28,7 @@ class PrepareTemporaryTargetDataWorker(
     params: WorkerParameters
 ) : Worker(context, params) {
 
-    @Inject lateinit var dataWorker: DataWorker
+    @Inject lateinit var dataWorkerStorage: DataWorkerStorage
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var repository: AppRepository
@@ -46,11 +46,11 @@ class PrepareTemporaryTargetDataWorker(
 
     override fun doWork(): Result {
 
-        val data = dataWorker.pickupObject(inputData.getLong(DataWorker.STORE_KEY, -1)) as PrepareTemporaryTargetData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as PrepareTemporaryTargetData?
             ?: return Result.failure(workDataOf("Error" to "missing input data"))
 
         rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.PREPARE_TEMPORARY_TARGET_DATA, 0, null))
-        val profile = profileFunction.getProfile() ?: return Result.failure(workDataOf("Error" to "missing profile"))
+        val profile = profileFunction.getProfile() ?: return Result.success(workDataOf("Error" to "missing profile"))
         val units = profileFunction.getUnits()
         var toTime = data.overviewData.toTime
         val targetsSeriesArray: MutableList<DataPoint> = ArrayList()

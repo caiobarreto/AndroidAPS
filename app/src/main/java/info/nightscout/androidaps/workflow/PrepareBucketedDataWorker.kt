@@ -5,15 +5,15 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.interfaces.IobCobCalculator
-import info.nightscout.androidaps.interfaces.ProfileFunction
 import info.nightscout.androidaps.plugins.general.overview.OverviewData
 import info.nightscout.androidaps.plugins.general.overview.graphExtensions.DataPointWithLabelInterface
 import info.nightscout.androidaps.plugins.general.overview.graphExtensions.InMemoryGlucoseValueDataPoint
 import info.nightscout.androidaps.plugins.general.overview.graphExtensions.PointsWithLabelGraphSeries
-import info.nightscout.androidaps.receivers.DataWorker
-import info.nightscout.androidaps.interfaces.ResourceHelper
-import info.nightscout.shared.logging.AAPSLogger
+import info.nightscout.androidaps.receivers.DataWorkerStorage
+import info.nightscout.interfaces.iob.IobCobCalculator
+import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.shared.interfaces.ResourceHelper
 import javax.inject.Inject
 
 class PrepareBucketedDataWorker(
@@ -21,7 +21,7 @@ class PrepareBucketedDataWorker(
     params: WorkerParameters
 ) : Worker(context, params) {
 
-    @Inject lateinit var dataWorker: DataWorker
+    @Inject lateinit var dataWorkerStorage: DataWorkerStorage
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var aapsLogger: AAPSLogger
@@ -37,7 +37,7 @@ class PrepareBucketedDataWorker(
 
     override fun doWork(): Result {
 
-        val data = dataWorker.pickupObject(inputData.getLong(DataWorker.STORE_KEY, -1)) as PrepareBucketedData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as PrepareBucketedData?
             ?: return Result.failure(workDataOf("Error" to "missing input data"))
 
         val bucketedData = data.iobCobCalculator.ads.getBucketedDataTableCopy() ?: return Result.success()

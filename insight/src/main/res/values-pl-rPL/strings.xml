@@ -17,7 +17,6 @@
     <string name="not_inserted">Nie wprowadzono</string>
     <string name="tdd_bolus">TDD Bolus</string>
     <string name="tdd_basal">TDD Baza</string>
-    <string name="tdd_total">TDD Całkowita</string>
     <string name="tbr_formatter">%1$d%% na %2$d / %3$d min</string>
     <string name="multiwave_bolus">Bolus złożony (wielofalowy)</string>
     <string name="eb_formatter">%1$.2f / %2$.2f U na %3$d min</string>
@@ -27,7 +26,6 @@
     <string name="code_compare">Czy kody wyświetlone na tym urządzeniu i na twojej pompie pasują?</string>
     <string name="insight_pairing">Parowanie Insight</string>
     <string name="insight_local">Accu-Chek Insight</string>
-    <string name="insight_delivered">podano %1$.2f U / %2$.2f U</string>
     <string name="insight_alert_formatter">%1$s: %2$s</string>
     <string name="tube_changed">Dren zmieniony</string>
     <string name="insightpump_shortname">Sight</string>

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
@@ -12,40 +13,52 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import androidx.work.*
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.BuildConfig
 import info.nightscout.androidaps.R
 import info.nightscout.androidaps.activities.DaggerAppCompatActivityWithResult
 import info.nightscout.androidaps.activities.PreferencesActivity
-import info.nightscout.androidaps.database.AppRepository
-import info.nightscout.androidaps.database.entities.UserEntry
-import info.nightscout.androidaps.database.entities.UserEntry.Action
-import info.nightscout.androidaps.database.entities.UserEntry.Sources
 import info.nightscout.androidaps.diaconn.events.EventDiaconnG8PumpLogReset
-import info.nightscout.androidaps.events.EventAppExit
-import info.nightscout.androidaps.interfaces.Config
-import info.nightscout.androidaps.interfaces.ImportExportPrefs
-import info.nightscout.androidaps.interfaces.ResourceHelper
 import info.nightscout.androidaps.logging.UserEntryLogger
-import info.nightscout.androidaps.plugins.bus.RxBus
-import info.nightscout.androidaps.plugins.general.maintenance.formats.*
-import info.nightscout.androidaps.utils.AndroidPermission
-import info.nightscout.androidaps.utils.DateUtil
-import info.nightscout.androidaps.utils.MidnightTime
-import info.nightscout.androidaps.utils.T
-import info.nightscout.androidaps.utils.ToastUtils
-import info.nightscout.androidaps.utils.alertDialogs.OKDialog
+import info.nightscout.androidaps.plugins.general.maintenance.formats.EncryptedPrefsFormat
 import info.nightscout.androidaps.utils.alertDialogs.PrefImportSummaryDialog
-import info.nightscout.androidaps.utils.alertDialogs.TwoMessagesAlertDialog
-import info.nightscout.androidaps.utils.alertDialogs.WarningDialog
-import info.nightscout.androidaps.interfaces.BuildHelper
 import info.nightscout.androidaps.utils.protection.PasswordCheck
-import info.nightscout.androidaps.utils.storage.Storage
 import info.nightscout.androidaps.utils.userEntry.UserEntryPresentationHelper
-import info.nightscout.shared.logging.AAPSLogger
-import info.nightscout.shared.logging.LTag
+import info.nightscout.core.ui.dialogs.OKDialog
+import info.nightscout.core.ui.dialogs.TwoMessagesAlertDialog
+import info.nightscout.core.ui.toast.ToastUtils
+import info.nightscout.database.entities.UserEntry
+import info.nightscout.database.entities.UserEntry.Action
+import info.nightscout.database.entities.UserEntry.Sources
+import info.nightscout.database.impl.AppRepository
+import info.nightscout.interfaces.AndroidPermission
+import info.nightscout.interfaces.BuildHelper
+import info.nightscout.interfaces.Config
+import info.nightscout.interfaces.maintenance.ImportExportPrefs
+import info.nightscout.interfaces.maintenance.PrefFileNotFoundError
+import info.nightscout.interfaces.maintenance.PrefIOError
+import info.nightscout.interfaces.maintenance.PrefMetadata
+import info.nightscout.interfaces.maintenance.Prefs
+import info.nightscout.interfaces.maintenance.PrefsFile
+import info.nightscout.interfaces.maintenance.PrefsFormat
+import info.nightscout.interfaces.maintenance.PrefsMetadataKey
+import info.nightscout.interfaces.maintenance.PrefsStatus
+import info.nightscout.interfaces.storage.Storage
+import info.nightscout.interfaces.utils.MidnightTime
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.events.EventAppExit
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.rx.logging.LTag
+import info.nightscout.shared.interfaces.ResourceHelper
 import info.nightscout.shared.sharedPreferences.SP
+import info.nightscout.shared.utils.DateUtil
+import info.nightscout.shared.utils.T
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -113,7 +126,7 @@ class ImportExportPrefsImpl @Inject constructor(
         val n1 = Settings.System.getString(context.contentResolver, "bluetooth_name")
         val n2 = Settings.Secure.getString(context.contentResolver, "bluetooth_name")
         val n3 = try {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                 (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter?.name
             } else null
         } catch (e: Exception){
@@ -159,10 +172,10 @@ class ImportExportPrefsImpl @Inject constructor(
 
     private fun assureMasterPasswordSet(activity: FragmentActivity, @StringRes wrongPwdTitle: Int): Boolean {
         if (!sp.contains(R.string.key_master_password) || (sp.getString(R.string.key_master_password, "") == "")) {
-            WarningDialog.showWarning(activity,
-                                      rh.gs(wrongPwdTitle),
-                                      rh.gs(R.string.master_password_missing, rh.gs(R.string.configbuilder_general), rh.gs(R.string.protection)),
-                                      R.string.nav_preferences, {
+            info.nightscout.core.ui.dialogs.WarningDialog.showWarning(activity,
+                                                                      rh.gs(wrongPwdTitle),
+                                                                      rh.gs(R.string.master_password_missing, rh.gs(R.string.configbuilder_general), rh.gs(R.string.protection)),
+                                                                      R.string.nav_preferences, {
                                           val intent = Intent(activity, PreferencesActivity::class.java).apply {
                                               putExtra("id", R.xml.pref_general)
                                           }
@@ -250,13 +263,13 @@ class ImportExportPrefsImpl @Inject constructor(
                     activity, rh.gs(R.string.preferences_export_canceled)
                         + "\n\n" + rh.gs(R.string.filenotfound)
                         + ": " + e.message
-                        + "\n\n" + rh.gs(R.string.needstoragepermission)
+                        + "\n\n" + rh.gs(R.string.need_storage_permission)
                 )
                 log.error(LTag.CORE, "File system exception", e)
             } catch (e: PrefIOError) {
                 ToastUtils.Long.errorToast(
                     activity, rh.gs(R.string.preferences_export_canceled)
-                        + "\n\n" + rh.gs(R.string.needstoragepermission)
+                        + "\n\n" + rh.gs(R.string.need_storage_permission)
                         + ": " + e.message
                 )
                 log.error(LTag.CORE, "File system exception", e)

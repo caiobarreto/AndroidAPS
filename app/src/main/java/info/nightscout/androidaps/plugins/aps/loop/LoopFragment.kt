@@ -1,27 +1,37 @@
 package info.nightscout.androidaps.plugins.aps.loop
 
 import android.os.Bundle
-import android.view.*
+import android.os.Handler
+import android.os.HandlerThread
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import dagger.android.support.DaggerFragment
 import info.nightscout.androidaps.R
 import info.nightscout.androidaps.databinding.LoopFragmentBinding
-import info.nightscout.androidaps.interfaces.Constraint
-import info.nightscout.androidaps.interfaces.Loop
 import info.nightscout.androidaps.plugins.aps.loop.events.EventLoopSetLastRunGui
 import info.nightscout.androidaps.plugins.aps.loop.events.EventLoopUpdateGui
-import info.nightscout.androidaps.plugins.bus.RxBus
-import info.nightscout.androidaps.utils.DateUtil
-import info.nightscout.androidaps.utils.FabricPrivacy
-import info.nightscout.androidaps.utils.HtmlHelper
-import info.nightscout.androidaps.interfaces.ResourceHelper
-import info.nightscout.androidaps.utils.rx.AapsSchedulers
-import info.nightscout.shared.logging.AAPSLogger
+import info.nightscout.core.fabric.FabricPrivacy
+import info.nightscout.core.pumpExtensions.toHtml
+import info.nightscout.interfaces.aps.Loop
+import info.nightscout.interfaces.constraints.Constraint
+import info.nightscout.interfaces.utils.HtmlHelper
+import info.nightscout.rx.AapsSchedulers
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.shared.interfaces.ResourceHelper
 import info.nightscout.shared.sharedPreferences.SP
+import info.nightscout.shared.utils.DateUtil
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import javax.inject.Inject
 
-class LoopFragment : DaggerFragment() {
+class LoopFragment : DaggerFragment(), MenuProvider {
 
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var aapsSchedulers: AapsSchedulers
@@ -32,8 +42,10 @@ class LoopFragment : DaggerFragment() {
     @Inject lateinit var loop: Loop
     @Inject lateinit var dateUtil: DateUtil
 
-    private val ID_MENU_RUN = 1
+    @Suppress("PrivatePropertyName")
+    private val ID_MENU_RUN = 501
 
+    private var handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
     private var disposable: CompositeDisposable = CompositeDisposable()
 
     private var _binding: LoopFragmentBinding? = null
@@ -45,35 +57,31 @@ class LoopFragment : DaggerFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         LoopFragmentBinding.inflate(inflater, container, false).also {
             _binding = it
-            setHasOptionsMenu(true)
+            requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
         }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(binding.swipeRefresh) {
-            setColorSchemeColors(rh.gac(context, R.attr.colorPrimaryDark), rh.gac(context, R.attr.colorPrimary), rh.gac(context, R.attr.colorSecondary))
-            setOnRefreshListener {
-                binding.lastrun.text = rh.gs(info.nightscout.androidaps.R.string.executing)
-                Thread { loop.invoke("Loop swiperefresh", true) }.start()
+        binding.swipeRefresh.setColorSchemeColors(rh.gac(context, R.attr.colorPrimaryDark), rh.gac(context, R.attr.colorPrimary), rh.gac(context, R.attr.colorSecondary))
+        binding.swipeRefresh.setOnRefreshListener {
+            binding.lastrun.text = rh.gs(R.string.executing)
+            handler.post {
+                loop.invoke("Loop swipe refresh", true)
             }
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        if (isResumed) {
-            menu.removeItem(ID_MENU_RUN)
-            menu.add(Menu.FIRST, ID_MENU_RUN, 0, rh.gs(R.string.openapsma_run)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-            menu.setGroupDividerEnabled(true)
-        }
+    override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
+        menu.add(Menu.FIRST, ID_MENU_RUN, 0, rh.gs(R.string.openapsma_run)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.setGroupDividerEnabled(true)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean =
+    override fun onMenuItemSelected(item: MenuItem): Boolean =
         when (item.itemId) {
             ID_MENU_RUN -> {
                 binding.lastrun.text = rh.gs(R.string.executing)
-                Thread { loop.invoke("Loop menu", true) }.start()
+                handler.post { loop.invoke("Loop menu", true) }
                 true
             }
 
@@ -106,6 +114,7 @@ class LoopFragment : DaggerFragment() {
     override fun onPause() {
         super.onPause()
         disposable.clear()
+        handler.removeCallbacksAndMessages(null)
     }
 
     @Synchronized
@@ -127,18 +136,19 @@ class LoopFragment : DaggerFragment() {
             binding.tbrrequestTime.text = dateUtil.dateAndTimeAndSecondsString(it.lastTBRRequest)
             binding.tbrexecutionTime.text = dateUtil.dateAndTimeAndSecondsString(it.lastTBREnact)
 
-            binding.tbrsetbypump.text = it.tbrSetByPump?.let { tbrSetByPump -> HtmlHelper.fromHtml(tbrSetByPump.toHtml()) }
+            binding.tbrsetbypump.text = it.tbrSetByPump?.let { tbrSetByPump -> HtmlHelper.fromHtml(tbrSetByPump.toHtml(rh)) }
                 ?: ""
-            binding.smbsetbypump.text = it.smbSetByPump?.let { smbSetByPump -> HtmlHelper.fromHtml(smbSetByPump.toHtml()) }
+            binding.smbsetbypump.text = it.smbSetByPump?.let { smbSetByPump -> HtmlHelper.fromHtml(smbSetByPump.toHtml(rh)) }
                 ?: ""
 
-            val constraints =
+            var constraints =
                 it.constraintsProcessed?.let { constraintsProcessed ->
                     val allConstraints = Constraint(0.0)
                     constraintsProcessed.rateConstraint?.let { rateConstraint -> allConstraints.copyReasons(rateConstraint) }
                     constraintsProcessed.smbConstraint?.let { smbConstraint -> allConstraints.copyReasons(smbConstraint) }
                     allConstraints.getMostLimitedReasons(aapsLogger)
                 } ?: ""
+            constraints += loop.closedLoopEnabled?.getReasons(aapsLogger) ?: ""
             binding.constraints.text = constraints
             binding.swipeRefresh.isRefreshing = false
         }

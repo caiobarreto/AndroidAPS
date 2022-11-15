@@ -17,7 +17,6 @@
     <string name="not_inserted">לא הוכנס</string>
     <string name="tdd_bolus">מינון בולוס יומי מצטבר</string>
     <string name="tdd_basal">מינון בזאלי יומי מצטבר</string>
-    <string name="tdd_total">מינון יומי מצטבר כולל</string>
     <string name="tbr_formatter">%1$d%% למשך %2$d/%3$d דק\'</string>
     <string name="multiwave_bolus">בולוס רב שלבי</string>
     <string name="eb_formatter">%1$.2f / %2$.2f יח\' למשך %3$d דק\'</string>
@@ -27,7 +26,6 @@
     <string name="code_compare">האם הקודים המוצגים בהתקן זה ובמשאבה זהים?</string>
     <string name="insight_pairing">צימוד Insight</string>
     <string name="insight_local">Accu-Chek Insight</string>
-    <string name="insight_delivered">%1$.2f יח\' מתוך %2$.2f יח\' הוזרקו</string>
     <string name="insight_alert_formatter">%1$s: %2$s</string>
     <string name="tube_changed">הצינורית הוחלפה</string>
     <string name="insightpump_shortname">Insight</string>

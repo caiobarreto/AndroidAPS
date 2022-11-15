@@ -1,27 +1,26 @@
 package info.nightscout.androidaps.plugins.general.wear
 
 import android.content.Context
-import android.content.Intent
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.events.EventAutosensCalculationFinished
-import info.nightscout.androidaps.events.EventMobileToWear
-import info.nightscout.androidaps.events.EventPreferenceChange
-import info.nightscout.androidaps.interfaces.PluginBase
-import info.nightscout.androidaps.interfaces.PluginDescription
-import info.nightscout.androidaps.interfaces.PluginType
 import info.nightscout.androidaps.plugins.aps.loop.events.EventLoopUpdateGui
-import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.general.overview.events.EventDismissBolusProgressIfRunning
-import info.nightscout.androidaps.plugins.general.overview.events.EventOverviewBolusProgress
 import info.nightscout.androidaps.plugins.general.wear.wearintegration.DataHandlerMobile
-import info.nightscout.androidaps.plugins.general.wear.wearintegration.DataLayerListenerServiceMobile
-import info.nightscout.androidaps.utils.FabricPrivacy
-import info.nightscout.androidaps.interfaces.ResourceHelper
-import info.nightscout.androidaps.utils.rx.AapsSchedulers
-import info.nightscout.shared.logging.AAPSLogger
+import info.nightscout.androidaps.plugins.general.wear.wearintegration.DataLayerListenerServiceMobileHelper
+import info.nightscout.core.fabric.FabricPrivacy
+import info.nightscout.interfaces.plugin.PluginBase
+import info.nightscout.interfaces.plugin.PluginDescription
+import info.nightscout.interfaces.plugin.PluginType
+import info.nightscout.rx.AapsSchedulers
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.events.EventAutosensCalculationFinished
+import info.nightscout.rx.events.EventMobileToWear
+import info.nightscout.rx.events.EventOverviewBolusProgress
+import info.nightscout.rx.events.EventPreferenceChange
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.rx.weardata.EventData
+import info.nightscout.shared.interfaces.ResourceHelper
 import info.nightscout.shared.sharedPreferences.SP
-import info.nightscout.shared.weardata.EventData
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import javax.inject.Inject
@@ -37,7 +36,8 @@ class WearPlugin @Inject constructor(
     private val fabricPrivacy: FabricPrivacy,
     private val rxBus: RxBus,
     private val context: Context,
-    private val dataHandlerMobile: DataHandlerMobile
+    private val dataHandlerMobile: DataHandlerMobile,
+    val dataLayerListenerServiceMobileHelper: DataLayerListenerServiceMobileHelper
 
 ) : PluginBase(
     PluginDescription()
@@ -57,7 +57,7 @@ class WearPlugin @Inject constructor(
 
     override fun onStart() {
         super.onStart()
-        context.startService(Intent(context, DataLayerListenerServiceMobile::class.java))
+        dataLayerListenerServiceMobileHelper.startService(context)
         disposable += rxBus
             .toObservable(EventDismissBolusProgressIfRunning::class.java)
             .observeOn(aapsSchedulers.io)
@@ -94,6 +94,6 @@ class WearPlugin @Inject constructor(
     override fun onStop() {
         disposable.clear()
         super.onStop()
-        context.stopService(Intent(context, DataLayerListenerServiceMobile::class.java))
+        dataLayerListenerServiceMobileHelper.stopService(context)
     }
 }

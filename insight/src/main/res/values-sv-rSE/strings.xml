@@ -17,7 +17,6 @@
     <string name="not_inserted">Inte isatt</string>
     <string name="tdd_bolus">TDD Bolus</string>
     <string name="tdd_basal">TDD basal</string>
-    <string name="tdd_total">TDD totalt</string>
     <string name="tbr_formatter">%1$d%% i %2$d / %3$d min</string>
     <string name="multiwave_bolus">Kombi-bolus</string>
     <string name="eb_formatter">%1$.2f / %2$.2f U i %3$d min</string>
@@ -27,7 +26,6 @@
     <string name="code_compare">Stämmer koderna överens mellan denna enhet och din pump?</string>
     <string name="insight_pairing">Parkoppling av Insight</string>
     <string name="insight_local">Accu-Chek Insight</string>
-    <string name="insight_delivered">%1$.2fU / %2$.2fU levererat</string>
     <string name="insight_alert_formatter">%1$s: %2$s</string>
     <string name="tube_changed">Slang bytt</string>
     <string name="insightpump_shortname">Sight</string>

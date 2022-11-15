@@ -6,27 +6,35 @@ import android.content.pm.ResolveInfo
 import android.os.Bundle
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.events.Event
-import info.nightscout.androidaps.events.EventAutosensCalculationFinished
 import info.nightscout.androidaps.extensions.durationInMinutes
 import info.nightscout.androidaps.extensions.toStringFull
-import info.nightscout.androidaps.interfaces.*
-import info.nightscout.androidaps.plugins.aps.events.EventOpenAPSUpdateGui
-import info.nightscout.androidaps.plugins.bus.RxBus
-import info.nightscout.androidaps.plugins.general.nsclient.data.DeviceStatusData
-import info.nightscout.androidaps.plugins.general.nsclient.data.NSDeviceStatus
-import info.nightscout.androidaps.plugins.general.overview.events.EventOverviewBolusProgress
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.GlucoseStatusProvider
-import info.nightscout.androidaps.receivers.ReceiverStatusStore
 import info.nightscout.androidaps.receivers.Intents
-import info.nightscout.androidaps.utils.DateUtil
+import info.nightscout.androidaps.receivers.ReceiverStatusStore
 import info.nightscout.androidaps.utils.DefaultValueHelper
-import info.nightscout.androidaps.utils.FabricPrivacy
-import info.nightscout.androidaps.interfaces.ResourceHelper
-import info.nightscout.androidaps.utils.rx.AapsSchedulers
-import info.nightscout.shared.logging.AAPSLogger
-import info.nightscout.shared.logging.LTag
+import info.nightscout.core.fabric.FabricPrivacy
+import info.nightscout.core.iob.round
+import info.nightscout.interfaces.Config
+import info.nightscout.interfaces.aps.Loop
+import info.nightscout.interfaces.iob.IobCobCalculator
+import info.nightscout.interfaces.plugin.ActivePlugin
+import info.nightscout.interfaces.plugin.PluginBase
+import info.nightscout.interfaces.plugin.PluginDescription
+import info.nightscout.interfaces.plugin.PluginType
+import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.plugins.sync.nsclient.data.ProcessedDeviceStatusData
+import info.nightscout.rx.AapsSchedulers
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.events.Event
+import info.nightscout.rx.events.EventAutosensCalculationFinished
+import info.nightscout.rx.events.EventOverviewBolusProgress
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.rx.logging.LTag
+import info.nightscout.shared.extensions.safeQueryBroadcastReceivers
+import info.nightscout.shared.interfaces.ResourceHelper
+import info.nightscout.shared.utils.DateUtil
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.kotlin.plusAssign
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,14 +51,12 @@ class DataBroadcastPlugin @Inject constructor(
     private val iobCobCalculator: IobCobCalculator,
     private val profileFunction: ProfileFunction,
     private val defaultValueHelper: DefaultValueHelper,
-    private val nsDeviceStatus: NSDeviceStatus,
-    private val deviceStatusData: DeviceStatusData,
+    private val processedDeviceStatusData: ProcessedDeviceStatusData,
     private val loop: Loop,
     private val activePlugin: ActivePlugin,
     private var receiverStatusStore: ReceiverStatusStore,
     private val config: Config,
     private val glucoseStatusProvider: GlucoseStatusProvider
-
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.GENERAL)
@@ -64,21 +70,18 @@ class DataBroadcastPlugin @Inject constructor(
     private val disposable = CompositeDisposable()
     override fun onStart() {
         super.onStart()
-        disposable.add(rxBus
-                           .toObservable(EventOpenAPSUpdateGui::class.java)
-                           .observeOn(aapsSchedulers.io)
-                           .subscribe({ sendData(it) }, fabricPrivacy::logException)
-        )
-        disposable.add(rxBus
-                           .toObservable(EventAutosensCalculationFinished::class.java)
-                           .observeOn(aapsSchedulers.io)
-                           .subscribe({ sendData(it) }, fabricPrivacy::logException)
-        )
-        disposable.add(rxBus
-                           .toObservable(EventOverviewBolusProgress::class.java)
-                           .observeOn(aapsSchedulers.io)
-                           .subscribe({ sendData(it) }, fabricPrivacy::logException)
-        )
+        disposable += rxBus
+            .toObservable(info.nightscout.plugins.aps.events.EventOpenAPSUpdateGui::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({ sendData(it) }, fabricPrivacy::logException)
+        disposable += rxBus
+            .toObservable(EventAutosensCalculationFinished::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({ sendData(it) }, fabricPrivacy::logException)
+        disposable += rxBus
+            .toObservable(EventOverviewBolusProgress::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({ sendData(it) }, fabricPrivacy::logException)
     }
 
     override fun onStop() {
@@ -137,7 +140,7 @@ class DataBroadcastPlugin @Inject constructor(
     private fun loopStatus(bundle: Bundle) {
         //batteries
         bundle.putInt("phoneBattery", receiverStatusStore.batteryLevel)
-        bundle.putInt("rigBattery", nsDeviceStatus.uploaderStatus.replace("%", "").trim { it <= ' ' }.toInt())
+        bundle.putInt("rigBattery", processedDeviceStatusData.uploaderStatus.replace("%", "").trim { it <= ' ' }.toInt())
 
         if (config.APS && loop.lastRun?.lastTBREnact != 0L) { //we are AndroidAPS
             bundle.putLong("suggestedTimeStamp", loop.lastRun?.lastAPSRun ?: -1L)
@@ -150,7 +153,7 @@ class DataBroadcastPlugin @Inject constructor(
                 bundle.putString("enacted", loop.lastRun?.request?.json().toString())
             }
         } else { //NSClient or remote
-            val data = deviceStatusData.openAPSData
+            val data = processedDeviceStatusData.openAPSData
             if (data.clockSuggested != 0L && data.suggested != null) {
                 bundle.putLong("suggestedTimeStamp", data.clockSuggested)
                 bundle.putString("suggested", data.suggested.toString())
@@ -186,7 +189,7 @@ class DataBroadcastPlugin @Inject constructor(
     }
 
     private fun sendBroadcast(intent: Intent) {
-        val receivers: List<ResolveInfo> = context.packageManager.queryBroadcastReceivers(intent, 0)
+        val receivers: List<ResolveInfo> = context.packageManager.safeQueryBroadcastReceivers(intent, 0)
         for (resolveInfo in receivers)
             resolveInfo.activityInfo.packageName?.let {
                 intent.setPackage(it)

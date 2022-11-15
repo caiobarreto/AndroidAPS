@@ -17,7 +17,6 @@
     <string name="not_inserted">Takılmamış</string>
     <string name="tdd_bolus">GTD Bolus</string>
     <string name="tdd_basal">GTD Bazal</string>
-    <string name="tdd_total">GTD Toplam</string>
     <string name="tbr_formatter">%2$d / %3$d dk için %%1$d%</string>
     <string name="multiwave_bolus">Çoklu yayma Bolus</string>
     <string name="eb_formatter">%3$d dk. %1$.2f / %2$.2f Ü</string>
@@ -27,7 +26,6 @@
     <string name="code_compare">Bu cihazda ve pompanızda görüntülenen kodlar uyuşuyor mu?</string>
     <string name="insight_pairing">Insight eşleştirme</string>
     <string name="insight_local">Accu-Chek Insight</string>
-    <string name="insight_delivered">%1$.2f Ü / %2$.2f Ü gönderildi</string>
     <string name="insight_alert_formatter">%1$s: %2$s</string>
     <string name="tube_changed">Hortum değişti</string>
     <string name="insightpump_shortname">Sight</string>

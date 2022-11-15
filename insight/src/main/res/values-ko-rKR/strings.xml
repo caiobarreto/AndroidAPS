@@ -17,7 +17,6 @@
     <string name="not_inserted">삽입되지 않음</string>
     <string name="tdd_bolus">TDD Bolus</string>
     <string name="tdd_basal">TDD Basal</string>
-    <string name="tdd_total">TDD Total</string>
     <string name="tbr_formatter">%2$d / %3$d분 동안 %1$d%%</string>
     <string name="multiwave_bolus">Multiwave Bolus</string>
     <string name="eb_formatter">%3$d분 동안 %1$.2f / %2$.2f U</string>
@@ -26,7 +25,6 @@
     <string name="code_compare">이 장치에서 보여지는 코드와 펌프에서 보여지는 코드가 동일한가요?</string>
     <string name="insight_pairing">Insight와 동기화</string>
     <string name="insight_local">아큐-첵 Insight</string>
-    <string name="insight_delivered">%1$.2f U / %2$.2f U 주입됨</string>
     <string name="insight_alert_formatter">%1$s: %2$s</string>
     <string name="tube_changed">튜브 변경</string>
     <string name="insightpump_shortname">Sight</string>

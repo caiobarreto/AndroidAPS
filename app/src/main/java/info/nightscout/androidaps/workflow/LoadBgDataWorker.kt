@@ -5,12 +5,13 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.database.AppRepository
-import info.nightscout.androidaps.interfaces.IobCobCalculator
-import info.nightscout.androidaps.plugins.bus.RxBus
-import info.nightscout.androidaps.receivers.DataWorker
-import info.nightscout.androidaps.utils.DateUtil
-import info.nightscout.shared.logging.AAPSLogger
+import info.nightscout.androidaps.receivers.DataWorkerStorage
+import info.nightscout.database.impl.AppRepository
+import info.nightscout.interfaces.iob.IobCobCalculator
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.shared.utils.DateUtil
+import loadBgData
 import javax.inject.Inject
 
 class LoadBgDataWorker(
@@ -18,7 +19,7 @@ class LoadBgDataWorker(
     params: WorkerParameters
 ) : Worker(context, params) {
 
-    @Inject lateinit var dataWorker: DataWorker
+    @Inject lateinit var dataWorkerStorage: DataWorkerStorage
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var rxBus: RxBus
@@ -35,7 +36,7 @@ class LoadBgDataWorker(
 
     override fun doWork(): Result {
 
-        val data = dataWorker.pickupObject(inputData.getLong(DataWorker.STORE_KEY, -1)) as LoadBgData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as LoadBgData?
             ?: return Result.failure(workDataOf("Error" to "missing input data"))
 
         data.iobCobCalculator.ads.loadBgData(data.end, repository, aapsLogger, dateUtil, rxBus)

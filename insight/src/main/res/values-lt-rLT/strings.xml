@@ -17,7 +17,6 @@
     <string name="not_inserted">Neįvestas</string>
     <string name="tdd_bolus">BPD bolusai</string>
     <string name="tdd_basal">BPD bazė</string>
-    <string name="tdd_total">BPD viso</string>
     <string name="tbr_formatter">%1$d%% - %2$d / %3$d min</string>
     <string name="multiwave_bolus">Daugiabangis bolusas</string>
     <string name="eb_formatter">%1$.2f / %2$.2f vv per %3$d min</string>
@@ -27,7 +26,6 @@
     <string name="code_compare">Ar kodas, kurį matote įrenginyje, sutampa su pompos kodu?</string>
     <string name="insight_pairing">Insight sujungimas</string>
     <string name="insight_local">Accu-Chek Insight</string>
-    <string name="insight_delivered">%1$.2f vv iš %2$.2f vv suleista</string>
     <string name="insight_alert_formatter">%1$s: %2$s</string>
     <string name="tube_changed">Kateteris pakeistas</string>
     <string name="insightpump_shortname">Sight</string>

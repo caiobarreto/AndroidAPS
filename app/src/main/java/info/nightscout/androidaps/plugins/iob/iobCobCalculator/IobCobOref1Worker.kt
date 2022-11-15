@@ -6,37 +6,39 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.Constants
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.database.AppRepository
-import info.nightscout.androidaps.database.ValueWrapper
-import info.nightscout.androidaps.events.Event
-import info.nightscout.androidaps.events.EventAutosensCalculationFinished
 import info.nightscout.androidaps.extensions.target
-import info.nightscout.androidaps.interfaces.ActivePlugin
-import info.nightscout.androidaps.interfaces.IobCobCalculator
-import info.nightscout.androidaps.interfaces.ProfileFunction
-import info.nightscout.androidaps.plugins.aps.openAPSSMB.SMBDefaults
-import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.general.overview.events.EventNewNotification
-import info.nightscout.androidaps.plugins.general.overview.notifications.Notification
-import info.nightscout.androidaps.plugins.iob.iobCobCalculator.data.AutosensData
+import info.nightscout.androidaps.plugins.iob.iobCobCalculator.data.AutosensDataObject
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.events.EventIobCalculationProgress
 import info.nightscout.androidaps.plugins.sensitivity.SensitivityAAPSPlugin
 import info.nightscout.androidaps.plugins.sensitivity.SensitivityWeightedAveragePlugin
-import info.nightscout.androidaps.receivers.DataWorker
-import info.nightscout.androidaps.utils.DateUtil
+import info.nightscout.androidaps.receivers.DataWorkerStorage
 import info.nightscout.androidaps.utils.DecimalFormatter
-import info.nightscout.androidaps.utils.FabricPrivacy
-import info.nightscout.androidaps.utils.Profiler
-import info.nightscout.androidaps.utils.T
-import info.nightscout.androidaps.interfaces.BuildHelper
-import info.nightscout.androidaps.interfaces.ResourceHelper
 import info.nightscout.androidaps.workflow.CalculationWorkflow
-import info.nightscout.shared.logging.AAPSLogger
-import info.nightscout.shared.logging.LTag
+import info.nightscout.core.fabric.FabricPrivacy
+import info.nightscout.database.impl.AppRepository
+import info.nightscout.database.impl.ValueWrapper
+import info.nightscout.interfaces.BuildHelper
+import info.nightscout.interfaces.Constants
+import info.nightscout.interfaces.aps.AutosensData
+import info.nightscout.interfaces.aps.SMBDefaults
+import info.nightscout.interfaces.iob.IobCobCalculator
+import info.nightscout.interfaces.notifications.Notification
+import info.nightscout.interfaces.plugin.ActivePlugin
+import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.interfaces.profiling.Profiler
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.events.Event
+import info.nightscout.rx.events.EventAutosensCalculationFinished
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.rx.logging.LTag
+import info.nightscout.shared.interfaces.ResourceHelper
 import info.nightscout.shared.sharedPreferences.SP
-import java.util.*
+import info.nightscout.shared.utils.DateUtil
+import info.nightscout.shared.utils.T
+import java.util.Calendar
+import java.util.GregorianCalendar
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.max
@@ -62,8 +64,7 @@ class IobCobOref1Worker(
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var repository: AppRepository
-    @Inject lateinit var dataWorker: DataWorker
-    @Inject lateinit var calculationWorkflow: CalculationWorkflow
+    @Inject lateinit var dataWorkerStorage: DataWorkerStorage
 
     init {
         (context.applicationContext as HasAndroidInjector).androidInjector().inject(this)
@@ -80,7 +81,7 @@ class IobCobOref1Worker(
 
     override fun doWork(): Result {
 
-        val data = dataWorker.pickupObject(inputData.getLong(DataWorker.STORE_KEY, -1)) as IobCobOref1WorkerData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as IobCobOref1WorkerData?
             ?: return Result.success(workDataOf("Error" to "missing input data"))
 
         val start = dateUtil.now()
@@ -97,11 +98,11 @@ class IobCobOref1Worker(
             val bucketedData = ads.bucketedData
             val autosensDataTable = ads.autosensDataTable
             if (bucketedData == null || bucketedData.size < 3) {
-                aapsLogger.debug(LTag.AUTOSENS, "Aborting calculation thread (No bucketed data available): ${data.from}")
+                aapsLogger.debug(LTag.AUTOSENS,  {"Aborting calculation thread (No bucketed data available): ${data.from}"})
                 return Result.success(workDataOf("Error" to "Aborting calculation thread (No bucketed data available): ${data.from}"))
             }
             val prevDataTime = ads.roundUpTime(bucketedData[bucketedData.size - 3].timestamp)
-            aapsLogger.debug(LTag.AUTOSENS, "Prev data time: " + dateUtil.dateAndTimeString(prevDataTime))
+            aapsLogger.debug(LTag.AUTOSENS, {"Prev data time: " + dateUtil.dateAndTimeString(prevDataTime)})
             var previous = autosensDataTable[prevDataTime]
             // start from oldest to be able sub cob
             for (i in bucketedData.size - 4 downTo 0) {
@@ -126,7 +127,7 @@ class IobCobOref1Worker(
                 }
                 aapsLogger.debug(LTag.AUTOSENS, "Processing calculation thread: ${data.from} ($i/${bucketedData.size})")
                 val sens = profile.getIsfMgdl(bgTime)
-                val autosensData = AutosensData(data.injector)
+                val autosensData = AutosensDataObject(data.injector)
                 autosensData.time = bgTime
                 if (previous != null) autosensData.activeCarbsList = previous.cloneCarbsList() else autosensData.activeCarbsList = ArrayList()
 
@@ -150,21 +151,21 @@ class IobCobOref1Worker(
 
                 // https://github.com/openaps/oref0/blob/master/lib/determine-basal/cob-autosens.js#L169
                 if (i < bucketedData.size - 16) { // we need 1h of data to calculate minDeviationSlope
-                    @Suppress("UNUSED_VARIABLE") var maxDeviation = 0.0
-                    @Suppress("UNUSED_VARIABLE") var minDeviation = 999.0
+                    var maxDeviation = 0.0
+                    var minDeviation = 999.0
                     val hourAgo = bgTime + 10 * 1000 - 60 * 60 * 1000L
                     val hourAgoData = ads.getAutosensDataAtTime(hourAgo)
                     if (hourAgoData != null) {
                         val initialIndex = autosensDataTable.indexOfKey(hourAgoData.time)
-                        aapsLogger.debug(LTag.AUTOSENS, ">>>>> bucketed_data.size()=" + bucketedData.size + " i=" + i + " hourAgoData=" + hourAgoData.toString())
+                        aapsLogger.debug(LTag.AUTOSENS, { ">>>>> bucketed_data.size()=" + bucketedData.size + " i=" + i + " hourAgoData=" + hourAgoData.toString() })
                         var past = 1
                         try {
                             while (past < 12) {
                                 val ad = autosensDataTable.valueAt(initialIndex + past)
-                                aapsLogger.debug(LTag.AUTOSENS, ">>>>> past=" + past + " ad=" + ad?.toString())
+                                aapsLogger.debug(LTag.AUTOSENS, { ">>>>> past=" + past + " ad=" + ad?.toString() })
                                 if (ad == null) {
-                                    aapsLogger.debug(LTag.AUTOSENS, autosensDataTable.toString())
-                                    aapsLogger.debug(LTag.AUTOSENS, bucketedData.toString())
+                                    aapsLogger.debug(LTag.AUTOSENS, {autosensDataTable.toString()})
+                                    aapsLogger.debug(LTag.AUTOSENS, {bucketedData.toString()})
                                     //aapsLogger.debug(LTag.AUTOSENS, iobCobCalculatorPlugin.getBgReadingsDataTable().toString())
                                     val notification = Notification(Notification.SEND_LOGFILES, rh.gs(R.string.sendlogfiles), Notification.LOW)
                                     rxBus.send(EventNewNotification(notification))
@@ -202,7 +203,7 @@ class IobCobOref1Worker(
                 for (recentCarbTreatment in recentCarbTreatments) {
                     autosensData.carbsFromBolus += recentCarbTreatment.amount
                     val isAAPSOrWeighted = sensitivityAAPSPlugin.isEnabled() || sensitivityWeightedAveragePlugin.isEnabled()
-                    autosensData.activeCarbsList.add(autosensData.CarbsInPast(recentCarbTreatment, isAAPSOrWeighted))
+                    autosensData.activeCarbsList.add(fromCarbs(recentCarbTreatment, isAAPSOrWeighted, profileFunction, aapsLogger, dateUtil, sp))
                     autosensData.pastSensitivity += "[" + DecimalFormatter.to0Decimal(recentCarbTreatment.amount) + "g]"
                 }
 
@@ -319,14 +320,12 @@ class IobCobOref1Worker(
                 if (bgTime < dateUtil.now()) autosensDataTable.put(bgTime, autosensData)
                 aapsLogger.debug(
                     LTag.AUTOSENS,
-                    "Running detectSensitivity from: " + dateUtil.dateAndTimeString(oldestTimeWithData) + " to: " + dateUtil.dateAndTimeString(bgTime) + " lastDataTime:" + ads.lastDataTime(
-                        dateUtil
-                    )
+                    {"Running detectSensitivity from: " + dateUtil.dateAndTimeString(oldestTimeWithData) + " to: " + dateUtil.dateAndTimeString(bgTime) + " lastDataTime:" + ads.lastDataTime(dateUtil)}
                 )
                 val sensitivity = activePlugin.activeSensitivity.detectSensitivity(ads, oldestTimeWithData, bgTime)
                 aapsLogger.debug(LTag.AUTOSENS, "Sensitivity result: $sensitivity")
                 autosensData.autosensResult = sensitivity
-                aapsLogger.debug(LTag.AUTOSENS, autosensData.toString())
+                aapsLogger.debug(LTag.AUTOSENS, {autosensData.toString()})
             }
             data.iobCobCalculator.ads = ads
             Thread {
@@ -335,7 +334,7 @@ class IobCobOref1Worker(
             }.start()
         } finally {
             rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.IOB_COB_OREF, 100, data.cause))
-            aapsLogger.debug(LTag.AUTOSENS, "AUTOSENSDATA thread ended: ${data.from}")
+            aapsLogger.debug(LTag.AUTOSENS, {"AUTOSENSDATA thread ended: ${data.from}"})
             profiler.log(LTag.AUTOSENS, "IobCobOref1Thread", start)
         }
         return Result.success()

@@ -5,20 +5,20 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.database.AppRepository
-import info.nightscout.androidaps.interfaces.GlucoseUnit
-import info.nightscout.androidaps.interfaces.IobCobCalculator
-import info.nightscout.androidaps.interfaces.Profile
-import info.nightscout.androidaps.interfaces.ProfileFunction
 import info.nightscout.androidaps.plugins.general.overview.OverviewData
 import info.nightscout.androidaps.plugins.general.overview.graphExtensions.DataPointWithLabelInterface
 import info.nightscout.androidaps.plugins.general.overview.graphExtensions.GlucoseValueDataPoint
 import info.nightscout.androidaps.plugins.general.overview.graphExtensions.PointsWithLabelGraphSeries
-import info.nightscout.androidaps.receivers.DataWorker
+import info.nightscout.androidaps.receivers.DataWorkerStorage
 import info.nightscout.androidaps.utils.DefaultValueHelper
-import info.nightscout.androidaps.utils.Round
-import info.nightscout.androidaps.interfaces.ResourceHelper
-import java.util.ArrayList
+import info.nightscout.core.profile.fromMgdlToUnits
+import info.nightscout.database.impl.AppRepository
+import info.nightscout.interfaces.GlucoseUnit
+import info.nightscout.interfaces.iob.IobCobCalculator
+import info.nightscout.interfaces.profile.Profile
+import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.interfaces.utils.Round
+import info.nightscout.shared.interfaces.ResourceHelper
 import javax.inject.Inject
 
 class PrepareBgDataWorker(
@@ -26,7 +26,7 @@ class PrepareBgDataWorker(
     params: WorkerParameters
 ) : Worker(context, params) {
 
-    @Inject lateinit var dataWorker: DataWorker
+    @Inject lateinit var dataWorkerStorage: DataWorkerStorage
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var defaultValueHelper: DefaultValueHelper
@@ -43,7 +43,7 @@ class PrepareBgDataWorker(
 
     override fun doWork(): Result {
 
-        val data = dataWorker.pickupObject(inputData.getLong(DataWorker.STORE_KEY, -1)) as PrepareBgData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as PrepareBgData?
             ?: return Result.failure(workDataOf("Error" to "missing input data"))
 
         data.overviewData.maxBgValue = Double.MIN_VALUE

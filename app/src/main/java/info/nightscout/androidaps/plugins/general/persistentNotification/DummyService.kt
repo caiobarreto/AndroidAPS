@@ -6,13 +6,13 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import dagger.android.DaggerService
-import info.nightscout.androidaps.events.EventAppExit
-import info.nightscout.androidaps.interfaces.NotificationHolder
-import info.nightscout.shared.logging.AAPSLogger
-import info.nightscout.shared.logging.LTag
-import info.nightscout.androidaps.plugins.bus.RxBus
-import info.nightscout.androidaps.utils.FabricPrivacy
-import info.nightscout.androidaps.utils.rx.AapsSchedulers
+import info.nightscout.core.fabric.FabricPrivacy
+import info.nightscout.interfaces.NotificationHolder
+import info.nightscout.rx.AapsSchedulers
+import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.events.EventAppExit
+import info.nightscout.rx.logging.AAPSLogger
+import info.nightscout.rx.logging.LTag
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import javax.inject.Inject
 
@@ -59,7 +59,7 @@ class DummyService : DaggerService() {
         aapsLogger.debug(LTag.CORE, "onDestroy")
         disposable.clear()
         super.onDestroy()
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
