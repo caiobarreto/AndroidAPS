@@ -12,22 +12,21 @@ import androidx.core.content.ContextCompat
 import dagger.android.support.DaggerFragment
 import info.nightscout.androidaps.extensions.toStringMedium
 import info.nightscout.androidaps.extensions.toStringShort
-import info.nightscout.androidaps.logging.UserEntryLogger
-import info.nightscout.androidaps.utils.protection.ProtectionCheck
-import info.nightscout.core.fabric.FabricPrivacy
 import info.nightscout.core.ui.UIRunnable
 import info.nightscout.core.ui.dialogs.OKDialog
 import info.nightscout.core.ui.elements.SingleClickButton
+import info.nightscout.core.utils.fabric.FabricPrivacy
+import info.nightscout.database.ValueWrapper
 import info.nightscout.database.entities.UserEntry.Action
 import info.nightscout.database.entities.UserEntry.Sources
 import info.nightscout.database.impl.AppRepository
-import info.nightscout.database.impl.ValueWrapper
-import info.nightscout.interfaces.BuildHelper
 import info.nightscout.interfaces.Config
 import info.nightscout.interfaces.aps.Loop
 import info.nightscout.interfaces.iob.IobCobCalculator
+import info.nightscout.interfaces.logging.UserEntryLogger
 import info.nightscout.interfaces.plugin.ActivePlugin
 import info.nightscout.interfaces.profile.ProfileFunction
+import info.nightscout.interfaces.protection.ProtectionCheck
 import info.nightscout.interfaces.pump.actions.CustomAction
 import info.nightscout.interfaces.queue.Callback
 import info.nightscout.interfaces.queue.CommandQueue
@@ -67,10 +66,9 @@ class ActionsFragment : DaggerFragment() {
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var iobCobCalculator: IobCobCalculator
     @Inject lateinit var commandQueue: CommandQueue
-    @Inject lateinit var buildHelper: BuildHelper
+    @Inject lateinit var config: Config
     @Inject lateinit var protectionCheck: ProtectionCheck
     @Inject lateinit var skinProvider: SkinProvider
-    @Inject lateinit var config: Config
     @Inject lateinit var uel: UserEntryLogger
     @Inject lateinit var repository: AppRepository
     @Inject lateinit var loop: Loop
@@ -171,8 +169,8 @@ class ActionsFragment : DaggerFragment() {
                 protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, UIRunnable { activityNames.runFillDialog(childFragmentManager) })
             }
         }
-        binding.historyBrowser.setOnClickListener { startActivity(Intent(context, activityNames.historyBrowseActivity::class.java)) }
-        binding.tddStats.setOnClickListener { startActivity(Intent(context, activityNames.tddStatsActivity::class.java)) }
+        binding.historyBrowser.setOnClickListener { startActivity(Intent(context, activityNames.historyBrowseActivity)) }
+        binding.tddStats.setOnClickListener { startActivity(Intent(context, activityNames.tddStatsActivity)) }
         binding.bgCheck.setOnClickListener {
             activityNames.runCareDialog(childFragmentManager, ActivityNames.EventType.BGCHECK, R.string.careportal_bgcheck)
         }
@@ -291,12 +289,14 @@ class ActionsFragment : DaggerFragment() {
             val imageResource = if (isPatchPump) R.drawable.ic_patch_pump_outline else R.drawable.ic_cp_age_cannula
             cannulaOrPatch.setCompoundDrawablesWithIntrinsicBounds(imageResource, 0, 0, 0)
             batteryLayout.visibility = (!isPatchPump || pump.pumpDescription.useHardwareLink).toVisibility()
+            cannulaUsageLabel.visibility = isPatchPump.not().toVisibility()
+            cannulaUsage.visibility = isPatchPump.not().toVisibility()
 
             if (!config.NSCLIENT) {
-                statusLightHandler.updateStatusLights(cannulaAge, insulinAge, reservoirLevel, sensorAge, sensorLevel, pbAge, batteryLevel)
+                statusLightHandler.updateStatusLights(cannulaAge, cannulaUsage, insulinAge, reservoirLevel, sensorAge, sensorLevel, pbAge, batteryLevel)
                 sensorLevelLabel.text = if (activeBgSource.sensorBatteryLevel == -1) "" else rh.gs(R.string.level_label)
             } else {
-                statusLightHandler.updateStatusLights(cannulaAge, insulinAge, null, sensorAge, null, pbAge, null)
+                statusLightHandler.updateStatusLights(cannulaAge, cannulaUsage, insulinAge, null, sensorAge, null, pbAge, null)
                 sensorLevelLabel.text = ""
                 insulinLevelLabel.text = ""
                 pbLevelLabel.text = ""

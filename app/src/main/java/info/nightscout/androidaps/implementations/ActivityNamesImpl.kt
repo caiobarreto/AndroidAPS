@@ -4,15 +4,19 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.annotation.RawRes
+import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentManager
 import info.nightscout.androidaps.MainActivity
 import info.nightscout.androidaps.activities.HistoryBrowseActivity
-import info.nightscout.androidaps.activities.SingleFragmentActivity
+import info.nightscout.androidaps.activities.MyPreferenceFragment
+import info.nightscout.androidaps.activities.PreferencesActivity
 import info.nightscout.androidaps.services.AlarmSoundService
 import info.nightscout.interfaces.ui.ActivityNames
 import info.nightscout.ui.activities.BolusProgressHelperActivity
 import info.nightscout.ui.activities.ErrorHelperActivity
+import info.nightscout.ui.activities.SingleFragmentActivity
 import info.nightscout.ui.activities.TDDStatsActivity
+import info.nightscout.ui.dialogs.BolusProgressDialog
 import info.nightscout.ui.dialogs.CareDialog
 import info.nightscout.ui.dialogs.ExtendedBolusDialog
 import info.nightscout.ui.dialogs.FillDialog
@@ -25,12 +29,14 @@ import javax.inject.Inject
 
 class ActivityNamesImpl @Inject constructor() : ActivityNames {
 
-    override val mainActivityClass: Class<*> = MainActivity::class.java
+    override val mainActivity: Class<*> = MainActivity::class.java
     override val tddStatsActivity: Class<*> = TDDStatsActivity::class.java
     override val historyBrowseActivity: Class<*> = HistoryBrowseActivity::class.java
     override val errorHelperActivity: Class<*> = ErrorHelperActivity::class.java
     override val bolusProgressHelperActivity: Class<*> = BolusProgressHelperActivity::class.java
     override val singleFragmentActivity: Class<*> = SingleFragmentActivity::class.java
+    override val preferencesActivity: Class<*> = PreferencesActivity::class.java
+    override val myPreferenceFragment: Class<*> = MyPreferenceFragment::class.java
 
     override fun runAlarm(ctx: Context, status: String, title: String, @RawRes soundId: Int) {
         val i = Intent(ctx, errorHelperActivity)
@@ -91,7 +97,7 @@ class ActivityNamesImpl @Inject constructor() : ActivityNames {
             .show(fragmentManager, "ProfileViewer")
     }
 
-    override fun runCareDialog(fragmentManager: FragmentManager, options: ActivityNames.EventType, event: Int) {
+    override fun runCareDialog(fragmentManager: FragmentManager, options: ActivityNames.EventType, @StringRes event: Int) {
         CareDialog()
             .also {
                 it.arguments = Bundle().also { bundle ->
@@ -100,5 +106,12 @@ class ActivityNamesImpl @Inject constructor() : ActivityNames {
                 }
             }
             .show(fragmentManager, "CareDialog")
+    }
+    override fun runBolusProgressDialog(fragmentManager: FragmentManager, insulin: Double, id: Long) {
+        BolusProgressDialog().also {
+            it.setInsulin(insulin)
+            it.setId(id)
+            it.show(fragmentManager, "BolusProgress")
+        }
     }
 }

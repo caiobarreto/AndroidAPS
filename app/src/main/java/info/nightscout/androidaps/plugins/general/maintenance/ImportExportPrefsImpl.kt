@@ -22,14 +22,12 @@ import androidx.work.workDataOf
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.BuildConfig
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.activities.DaggerAppCompatActivityWithResult
 import info.nightscout.androidaps.activities.PreferencesActivity
 import info.nightscout.androidaps.diaconn.events.EventDiaconnG8PumpLogReset
-import info.nightscout.androidaps.logging.UserEntryLogger
+import info.nightscout.interfaces.logging.UserEntryLogger
 import info.nightscout.androidaps.plugins.general.maintenance.formats.EncryptedPrefsFormat
-import info.nightscout.androidaps.utils.alertDialogs.PrefImportSummaryDialog
-import info.nightscout.androidaps.utils.protection.PasswordCheck
 import info.nightscout.androidaps.utils.userEntry.UserEntryPresentationHelper
+import info.nightscout.core.activities.DaggerAppCompatActivityWithResult
 import info.nightscout.core.ui.dialogs.OKDialog
 import info.nightscout.core.ui.dialogs.TwoMessagesAlertDialog
 import info.nightscout.core.ui.toast.ToastUtils
@@ -38,9 +36,9 @@ import info.nightscout.database.entities.UserEntry.Action
 import info.nightscout.database.entities.UserEntry.Sources
 import info.nightscout.database.impl.AppRepository
 import info.nightscout.interfaces.AndroidPermission
-import info.nightscout.interfaces.BuildHelper
 import info.nightscout.interfaces.Config
 import info.nightscout.interfaces.maintenance.ImportExportPrefs
+import info.nightscout.interfaces.maintenance.PrefFileListProvider
 import info.nightscout.interfaces.maintenance.PrefFileNotFoundError
 import info.nightscout.interfaces.maintenance.PrefIOError
 import info.nightscout.interfaces.maintenance.PrefMetadata
@@ -49,6 +47,7 @@ import info.nightscout.interfaces.maintenance.PrefsFile
 import info.nightscout.interfaces.maintenance.PrefsFormat
 import info.nightscout.interfaces.maintenance.PrefsMetadataKey
 import info.nightscout.interfaces.maintenance.PrefsStatus
+import info.nightscout.interfaces.protection.PasswordCheck
 import info.nightscout.interfaces.storage.Storage
 import info.nightscout.interfaces.utils.MidnightTime
 import info.nightscout.rx.bus.RxBus
@@ -59,6 +58,7 @@ import info.nightscout.shared.interfaces.ResourceHelper
 import info.nightscout.shared.sharedPreferences.SP
 import info.nightscout.shared.utils.DateUtil
 import info.nightscout.shared.utils.T
+import info.nightscout.ui.alertDialogs.PrefImportSummaryDialog
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -75,10 +75,9 @@ class ImportExportPrefsImpl @Inject constructor(
     private var log: AAPSLogger,
     private val rh: ResourceHelper,
     private val sp: SP,
-    private val buildHelper: BuildHelper,
+    private val config: Config,
     private val rxBus: RxBus,
     private val passwordCheck: PasswordCheck,
-    private val config: Config,
     private val androidPermission: AndroidPermission,
     private val encryptedPrefsFormat: EncryptedPrefsFormat,
     private val prefFileList: PrefFileListProvider,
@@ -199,9 +198,9 @@ class ImportExportPrefsImpl @Inject constructor(
     }
 
     private fun askToConfirmImport(activity: FragmentActivity, fileToImport: PrefsFile, then: ((password: String) -> Unit)) {
-        if (!assureMasterPasswordSet(activity, R.string.nav_import)) return
+        if (!assureMasterPasswordSet(activity, R.string.import_setting)) return
         TwoMessagesAlertDialog.showAlert(
-            activity, rh.gs(R.string.nav_import),
+            activity, rh.gs(R.string.import_setting),
             rh.gs(R.string.import_from) + " " + fileToImport.name + " ?",
             rh.gs(R.string.password_preferences_decrypt_prompt), {
                 askForMasterPass(activity, R.string.preferences_import_canceled, then)
@@ -313,7 +312,7 @@ class ImportExportPrefsImpl @Inject constructor(
                 promptForDecryptionPasswordIfNeeded(activity, prefsAttempted, importOkAttempted, format, importFile) { prefs, importOk ->
 
                     // if at end we allow to import preferences
-                    val importPossible = (importOk || buildHelper.isEngineeringMode()) && (prefs.values.isNotEmpty())
+                    val importPossible = (importOk || config.isEngineeringMode()) && (prefs.values.isNotEmpty())
 
                     PrefImportSummaryDialog.showSummary(activity, importOk, importPossible, prefs, {
                         if (importPossible) {

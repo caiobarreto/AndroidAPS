@@ -22,8 +22,9 @@ dependencies {
     implementation project(':database:impl')
     implementation project(':graphview')
     implementation project(':core:core-main')
-    implementation project(':core:fabric')
+    implementation project(':core:graph')
     implementation project(':core:ui')
+    implementation project(':core:utils')
     implementation project(':interfaces')
     implementation project(':ns-sdk')
 
@@ -31,7 +32,7 @@ dependencies {
     api "com.google.android.material:material:$material_version"
 
     // Actions
-    api 'androidx.gridlayout:gridlayout:1.0.0'
+    api "androidx.gridlayout:gridlayout:$gridlayout_version"
 
     // NSClient, Tidepool
     api("io.socket:socket.io-client:1.0.0") {
@@ -54,4 +55,11 @@ dependencies {
 
     // Overview
     api 'com.google.android.flexbox:flexbox:3.0.0'
+
+    // Food
+    api "androidx.work:work-runtime:$work_version"
+    api "androidx.work:work-runtime-ktx:$work_version"
+
+    // DataLayerListenerService
+    api "com.google.android.gms:play-services-wearable:$play_services_wearable_version"
 }

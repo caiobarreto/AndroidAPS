@@ -8,17 +8,17 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import com.google.android.material.tabs.TabLayout
 import com.google.common.collect.Lists
-import info.nightscout.androidaps.activities.NoSplashAppCompatActivity
-import info.nightscout.androidaps.data.ProfileSealed
-import info.nightscout.androidaps.interfaces.stats.TddCalculator
-import info.nightscout.core.fabric.FabricPrivacy
+import info.nightscout.core.activities.NoSplashAppCompatActivity
+import info.nightscout.core.profile.ProfileSealed
 import info.nightscout.core.ui.dialogs.OKDialog
 import info.nightscout.core.ui.toast.ToastUtils
+import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.database.entities.EffectiveProfileSwitch
 import info.nightscout.database.impl.AppRepository
 import info.nightscout.interfaces.plugin.ActivePlugin
 import info.nightscout.interfaces.profile.ProfileFunction
 import info.nightscout.interfaces.profile.PureProfile
+import info.nightscout.interfaces.stats.TddCalculator
 import info.nightscout.interfaces.ui.ActivityNames
 import info.nightscout.rx.AapsSchedulers
 import info.nightscout.rx.events.EventLocalProfileChanged
@@ -234,7 +234,7 @@ class ProfileHelperActivity : NoSplashAppCompatActivity() {
                     return@setOnClickListener
                 }
             }
-            ToastUtils.warnToast(this, R.string.invalidinput)
+            ToastUtils.warnToast(this, R.string.invalid_input)
         }
         binding.ageLabel.labelFor = binding.age.editTextId
         binding.tddLabel.labelFor = binding.tdd.editTextId

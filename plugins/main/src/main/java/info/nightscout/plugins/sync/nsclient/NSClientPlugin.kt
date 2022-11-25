@@ -12,10 +12,9 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreference
 import dagger.android.HasAndroidInjector
-import info.nightscout.core.fabric.FabricPrivacy
 import info.nightscout.core.toast.showToastAdNotification
 import info.nightscout.core.ui.toast.ToastUtils
-import info.nightscout.interfaces.BuildHelper
+import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.interfaces.Config
 import info.nightscout.interfaces.Constants
 import info.nightscout.interfaces.plugin.PluginBase
@@ -40,6 +39,7 @@ import info.nightscout.rx.events.EventAppExit
 import info.nightscout.rx.events.EventChargingState
 import info.nightscout.rx.events.EventNetworkChange
 import info.nightscout.rx.events.EventPreferenceChange
+import info.nightscout.rx.events.EventSWSyncStatus
 import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.rx.logging.LTag
 import info.nightscout.shared.interfaces.ResourceHelper
@@ -61,7 +61,6 @@ class NSClientPlugin @Inject constructor(
     private val sp: SP,
     private val nsClientReceiverDelegate: NsClientReceiverDelegate,
     private val config: Config,
-    private val buildHelper: BuildHelper,
     private val dataSyncSelector: DataSyncSelector
 ) : NsClient, Sync, PluginBase(
     PluginDescription()
@@ -92,10 +91,12 @@ class NSClientPlugin @Inject constructor(
         disposable += rxBus
             .toObservable(EventNSClientStatus::class.java)
             .observeOn(aapsSchedulers.io)
-            .subscribe({ event: EventNSClientStatus ->
+            .subscribe({ event ->
                            if (event.version == NsClient.Version.V1) {
                                status = event.getStatus(context)
                                rxBus.send(EventNSClientUpdateGUI())
+                               // Pass to setup wizard
+                               rxBus.send(EventSWSyncStatus(event.getStatus(context)))
                            }
                        }, fabricPrivacy::logException)
         disposable += rxBus
@@ -142,7 +143,7 @@ class NSClientPlugin @Inject constructor(
             preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_create_announcements_from_errors))?.isVisible = false
             preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_create_announcements_from_carbs_req))?.isVisible = false
         }
-        preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_receive_tbr_eb))?.isVisible = buildHelper.isEngineeringMode()
+        preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_receive_tbr_eb))?.isVisible = config.isEngineeringMode()
     }
 
     override val hasWritePermission: Boolean get() = nsClientService?.hasWriteAuth ?: false

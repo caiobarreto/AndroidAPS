@@ -1,13 +1,12 @@
 package info.nightscout.androidaps.plugins.configBuilder
 
-import info.nightscout.androidaps.data.ProfileSealed
-import info.nightscout.androidaps.events.EventEffectiveProfileSwitchChanged
 import info.nightscout.androidaps.extensions.fromConstant
-import info.nightscout.core.fabric.FabricPrivacy
 import info.nightscout.core.main.R
+import info.nightscout.core.profile.ProfileSealed
+import info.nightscout.core.utils.fabric.FabricPrivacy
+import info.nightscout.database.ValueWrapper
 import info.nightscout.database.entities.ProfileSwitch
 import info.nightscout.database.impl.AppRepository
-import info.nightscout.database.impl.ValueWrapper
 import info.nightscout.database.impl.transactions.InsertOrUpdateProfileSwitch
 import info.nightscout.interfaces.Config
 import info.nightscout.interfaces.Constants
@@ -20,6 +19,7 @@ import info.nightscout.interfaces.utils.HardLimits
 import info.nightscout.plugins.sync.nsclient.data.ProcessedDeviceStatusData
 import info.nightscout.rx.AapsSchedulers
 import info.nightscout.rx.bus.RxBus
+import info.nightscout.rx.events.EventEffectiveProfileSwitchChanged
 import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.rx.logging.LTag
 import info.nightscout.shared.interfaces.ResourceHelper

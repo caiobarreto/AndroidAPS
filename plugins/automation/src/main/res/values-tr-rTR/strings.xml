@@ -28,7 +28,6 @@
     <string name="sendsmsactiondescription">Tüm numaralara SMS gönder</string>
     <string name="sendsmsactiontext">Metin ile SMS gönder</string>
     <string name="starttemptarget">Geçici hedefi başlat</string>
-    <string name="stoptemptarget">Geçici hedefi durdur</string>
     <string name="islesser">küçükse</string>
     <string name="isequalorlesser">eşit veya küçükse</string>
     <string name="isequal">eşitse</string>
@@ -116,10 +115,17 @@
     <string name="remove_selected_items">Seçilen öğeleri kaldır</string>
     <string name="count_selected">%1$d seçildi</string>
     <string name="confirm_remove_multiple_items">%1$d öğeyi kaldırmak istediğinizden emin misiniz</string>
-    <string name="sort_label">Sırala</string>
     <string name="system_automation">Sistem otomasyonu</string>
     <string name="run_automations">Otomasyonları çalıştır</string>
     <string name="add_automation">Kural ekle</string>
     <string name="remove_sort">Kaldır/sırala</string>
     <string name="stop_processing">İşlemeyi durdur</string>
+    <!-- WeekdayPicker -->
+    <string name="monday_short">Pzt</string>
+    <string name="tuesday_short">Sal</string>
+    <string name="wednesday_short">Çar</string>
+    <string name="thursday_short">Per</string>
+    <string name="friday_short">Cum</string>
+    <string name="saturday_short">Cmt</string>
+    <string name="sunday_short">Paz</string>
 </resources>

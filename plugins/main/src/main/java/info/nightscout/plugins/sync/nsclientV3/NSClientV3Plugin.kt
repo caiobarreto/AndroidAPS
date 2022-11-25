@@ -12,10 +12,9 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import dagger.android.HasAndroidInjector
-import info.nightscout.core.fabric.FabricPrivacy
 import info.nightscout.core.toast.showToastAdNotification
 import info.nightscout.core.ui.toast.ToastUtils
-import info.nightscout.interfaces.BuildHelper
+import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.interfaces.Config
 import info.nightscout.interfaces.Constants
 import info.nightscout.interfaces.plugin.PluginBase
@@ -42,6 +41,7 @@ import info.nightscout.rx.bus.RxBus
 import info.nightscout.rx.events.EventChargingState
 import info.nightscout.rx.events.EventNetworkChange
 import info.nightscout.rx.events.EventPreferenceChange
+import info.nightscout.rx.events.EventSWSyncStatus
 import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.rx.logging.LTag
 import info.nightscout.sdk.NSAndroidClientImpl
@@ -71,7 +71,6 @@ class NSClientV3Plugin @Inject constructor(
     private val sp: SP,
     private val nsClientReceiverDelegate: NsClientReceiverDelegate,
     private val config: Config,
-    private val buildHelper: BuildHelper,
     private val dateUtil: DateUtil
 ) : NsClient, Sync, PluginBase(
     PluginDescription()
@@ -149,6 +148,8 @@ class NSClientV3Plugin @Inject constructor(
                            if (event.version == NsClient.Version.V3) {
                                status = event.getStatus(context)
                                rxBus.send(EventNSClientUpdateGUI())
+                               // Pass to setup wizard
+                               rxBus.send(EventSWSyncStatus(event.getStatus(context)))
                            }
                        }, fabricPrivacy::logException)
         disposable += rxBus
@@ -195,7 +196,7 @@ class NSClientV3Plugin @Inject constructor(
             preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_create_announcements_from_errors))?.isVisible = false
             preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_create_announcements_from_carbs_req))?.isVisible = false
         }
-        preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_receive_tbr_eb))?.isVisible = buildHelper.isEngineeringMode()
+        preferenceFragment.findPreference<SwitchPreference>(rh.gs(R.string.key_ns_receive_tbr_eb))?.isVisible = config.isEngineeringMode()
     }
 
     override val hasWritePermission: Boolean get() = nsClientService?.hasWriteAuth ?: false

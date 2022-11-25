@@ -4,7 +4,6 @@
     <!-- SMS Communicator & OTP Authenticator -->
     <string name="key_smscommunicator_otp_password" translatable="false">smscommunicator_otp_password</string>
     <string name="key_smscommunicator_otp_secret" translatable="false">smscommunicator_otp_secret</string>
-    <string name="key_patient_name" translatable="false">patient_name</string>
     <string name="key_smscommunicator_remote_bolus_min_distance" translatable="false">smscommunicator_remotebolusmindistance</string>
     <string name="key_smscommunicator_allowednumbers" translatable="false">smscommunicator_allowednumbers</string>
     <string name="key_smscommunicator_remote_commands_allowed" translatable="false">smscommunicator_remotecommandsallowed</string>
@@ -272,8 +271,6 @@
     <string name="patch_pump">Patch pump</string>
 
     <!-- Safety -->
-    <string name="key_treatmentssafety_maxbolus" translatable="false">treatmentssafety_maxbolus</string>
-
     <string name="limitingextendedbolus">Limiting extended bolus to %1$.1f U because of %2$s</string>
     <string name="limitingcarbs">Limiting carbs to %1$d g because of %2$s</string>
     <string name="limitingiob">Limiting IOB to %1$.1f U because of %2$s</string>
@@ -281,7 +278,6 @@
     <string name="safety" translatable="false">Safety</string>
     <string name="pumpisnottempbasalcapable">Pump is not temp basal capable</string>
     <string name="closedmodedisabledinpreferences">Closed loop mode disabled in preferences</string>
-    <string name="uamdisabledoref1notselected">UAM disabled because it rely on Oref1 sensitivity plugin</string>
     <string name="closed_loop_disabled_on_dev_branch">Running dev version. Closed loop is disabled.</string>
     <string name="closed_loop_disabled_with_eb">Closed loop disabled because of running Extended bolus</string>
     <string name="smbalwaysdisabled">SMB always and after carbs disabled because active BG source doesn\'t support advanced filtering</string>
@@ -289,15 +285,6 @@
     <string name="maxvalueinpreferences">max value in preferences</string>
     <string name="hardlimit">hard limit</string>
     <string name="treatmentssafety_title">Treatments safety</string>
-    <string name="patientage_summary">Please select patient type to setup safety limits</string>
-    <string name="child">Child</string>
-    <string name="teenage">Teenage</string>
-    <string name="adult">Adult</string>
-    <string name="resistantadult">Insulin resistant adult</string>
-    <string name="pregnant">Pregnancy</string>
-    <string name="treatmentssafety_maxbolus_title">Max allowed bolus [U]</string>
-    <string name="treatmentssafety_maxcarbs_title">Max allowed carbs [g]</string>
-    <string name="patientage">Patient type</string>
 
     <!-- Overview -->
     <string name="key_statuslights_copy_ns" translatable="false">statuslights_copy_ns</string>
@@ -563,5 +550,77 @@
     <string name="buttonson_description">Buttons are always displayed on bottom of screen</string>
     <string name="largedisplay_description">Large display</string>
     <string name="skin">Skin</string>
+
+    <!--    Loop -->
+    <string name="key_smb_enable_carbs_suggestions_threshold" translatable="false">smb_enable_carbs_suggestions_threshold</string>
+
+    <string name="executing">Executing</string>
+    <string name="run_now">Run now</string>
+    <string name="smb_frequency_exceeded">A bolus was delivered within the last 3 minutes, skipping SMB</string>
+    <string name="pump_not_initialized">Pump not initialized!</string>
+    <string name="loop_shortname">LOOP</string>
+    <string name="description_loop">Activate or deactivate the implementation triggering the loop.</string>
+    <string name="no_aps_selected">NO APS SELECTED OR PROVIDED RESULT</string>
+    <string name="ignore5m">Ignore 5m</string>
+    <string name="ignore15m">Ignore 15m</string>
+    <string name="ignore30m">Ignore 30m</string>
+    <string name="carbs_suggestion">Carbs Suggestion</string>
+    <string name="open_loop_new_suggestion">New suggestion available</string>
+    <string name="basal_set_correctly">Basal set correctly</string>
+    <string name="last_run_label">Last run</string>
+    <string name="loop_aps_label">APS</string>
+    <string name="request_label">Request</string>
+    <string name="loop_constraints_processed_label">After processed constraints</string>
+    <string name="constraints">Constraints</string>
+    <string name="loop_tbr_request_time_label">Temp basal request time</string>
+    <string name="loop_tbr_execution_time_label">Temp basal execution time</string>
+    <string name="loop_tbr_set_by_pump_label">Temp basal set by pump</string>
+    <string name="loop_smb_request_time_label">SMB request time</string>
+    <string name="loop_smb_execution_time_label">SMB execution time</string>
+    <string name="loop_smb_set_by_pump_label">SMB set by pump</string>
+    <string name="loop_open_mode_min_change">Minimal request change [%]</string>
+    <string name="loop_open_mode_min_change_summary" formatted="false">Open Loop will popup new change request only if change is bigger than this value in %. Default value is 20%</string>
+
+    <!--    DataBroadcast-->
+    <string name="data_broadcaster" translatable="false">Data Broadcaster</string>
+    <string name="cannula_usage">usage:</string>
+
+    <!--    Iob-->
+    <string name="send_logfiles">Send today\'s log files to developers along with this time. Unexpected situation.</string>
+    <string name="iob_cob_calculator" translatable="false">IobCobCalculator</string>
+
+    <!--    Wear-->
+    <string name="wear_shortname">WEAR</string>
+    <string name="description_wear">Monitor and control AAPS using your WearOS watch.</string>
+    <string name="no_watch_connected">(No Watch Connected)</string>
+    <string name="pump_status">Pump status</string>
+    <string name="loop_status">Loop status</string>
+    <string name="wizard_result">Calc. Wizard:\nInsulin: %1$.2fU\nCarbs: %2$dg</string>
+    <string name="quick_wizard_not_available">Selected quickwizard no longer available, please refresh your tile</string>
+    <string name="quick_wizard_message">QuickWizard: %1$s\nInsulin: %2$.2fU\nCarbs: %3$dg</string>
+    <string name="wear_action_tempt_preset_error">Temptarget unknown preset: %1$s</string>
+    <string name="wear_action_tempt_cancel_message">Cancelling running Temp-Targets?</string>
+    <string name="wear_action_tempt_unit_error">Different units used on watch and phone!</string>
+    <string name="wear_action_tempt_zero_message">Zero-Temp-Target - cancelling running Temp-Targets?</string>
+    <string name="wear_action_tempt_min_bg_error">Min-BG out of range!</string>
+    <string name="wear_action_tempt_max_bg_error">Max-BG out of range!</string>
+    <string name="wear_action_tempt_manual_range_message">Temptarget:\nMin: %1$s\nMax: %2$s\nDuration: %3$s</string>
+    <string name="wear_action_tempt_manual_message">Temptarget:\nTarget: %1$s\nDuration: %2$s</string>
+    <string name="wear_action_tempt_preset_message">Temptarget:\nReason: %1$s\nTarget: %2$s\nDuration: %3$s</string>
+    <string name="no_success">not successful - please check phone</string>
+    <string name="wear_settings">Wear settings</string>
+    <string name="wearcontrol_title">Controls from Watch</string>
+    <string name="wearcontrol_summary">Set Temp-Targets and enter Treatments from the watch.</string>
+    <string name="wear_wizard_settings_summary">Calculations included in the Wizard result:</string>
+    <string name="wear_display_settings">Display Settings</string>
+    <string name="wear_general_settings">General Settings</string>
+    <string name="wear_detailed_delta_title">Show detailed delta</string>
+    <string name="wear_detailed_delta_summary">Show delta with one more decimal place</string>
+    <string name="wear_notifysmb_title">Notify on SMB</string>
+    <string name="wear_notifysmb_summary">Show SMB on the watch like a standard bolus.</string>
+    <string name="wear_predictions_summary">Show the predictions on the watchface.</string>
+    <string name="wear_predictions_title">Predictions</string>
+    <string name="resend_all_data">Resend All Data</string>
+    <string name="open_settings_on_wear">Open Settings on Wear</string>
 
 </resources>

@@ -10,10 +10,8 @@ import info.nightscout.androidaps.dana.DanaFragment;
 import info.nightscout.androidaps.dana.DanaPump;
 import info.nightscout.androidaps.dana.comm.RecordTypes;
 import info.nightscout.androidaps.danar.services.AbstractDanaRExecutionService;
-import info.nightscout.androidaps.extensions.PumpStateExtensionKt;
-import info.nightscout.androidaps.plugins.general.overview.events.EventDismissNotification;
-import info.nightscout.androidaps.plugins.general.overview.events.EventNewNotification;
-import info.nightscout.androidaps.utils.DecimalFormatter;
+import info.nightscout.core.events.EventNewNotification;
+import info.nightscout.core.pump.PumpStateExtensionKt;
 import info.nightscout.interfaces.constraints.Constraint;
 import info.nightscout.interfaces.constraints.Constraints;
 import info.nightscout.interfaces.notifications.Notification;
@@ -29,10 +27,12 @@ import info.nightscout.interfaces.pump.PumpSync;
 import info.nightscout.interfaces.pump.defs.ManufacturerType;
 import info.nightscout.interfaces.pump.defs.PumpDescription;
 import info.nightscout.interfaces.queue.CommandQueue;
+import info.nightscout.interfaces.utils.DecimalFormatter;
 import info.nightscout.interfaces.utils.Round;
 import info.nightscout.rx.AapsSchedulers;
 import info.nightscout.rx.bus.RxBus;
 import info.nightscout.rx.events.EventConfigBuilderChange;
+import info.nightscout.rx.events.EventDismissNotification;
 import info.nightscout.rx.events.EventPreferenceChange;
 import info.nightscout.rx.logging.AAPSLogger;
 import info.nightscout.rx.logging.LTag;
@@ -218,7 +218,7 @@ public abstract class AbstractDanaRPlugin extends PumpPluginBase implements Pump
         PumpEnactResult result = new PumpEnactResult(getInjector());
         percent = constraintChecker.applyBasalPercentConstraints(new Constraint<>(percent), profile).value();
         if (percent < 0) {
-            result.isTempCancel(false).enacted(false).success(false).comment(R.string.invalidinput);
+            result.isTempCancel(false).enacted(false).success(false).comment(R.string.invalid_input);
             getAapsLogger().error("setTempBasalPercent: Invalid input");
             return result;
         }

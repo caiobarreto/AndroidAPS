@@ -12,7 +12,11 @@ import dagger.Module
         SourceModule::class,
         VirtualPumpModule::class,
         ObjectivesModule::class,
-        SkinsModule::class
+        SkinsModule::class,
+        SkinsUiModule::class,
+        LoopModule::class,
+        ActionsModule::class,
+        WearModule::class
     ]
 )
 
