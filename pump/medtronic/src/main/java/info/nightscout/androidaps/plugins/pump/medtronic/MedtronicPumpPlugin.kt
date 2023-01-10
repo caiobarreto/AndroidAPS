@@ -7,9 +7,6 @@ import android.os.IBinder
 import android.os.SystemClock
 import androidx.preference.Preference
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.plugins.pump.common.PumpPluginAbstract
-import info.nightscout.androidaps.plugins.pump.common.data.PumpStatus
-import info.nightscout.androidaps.plugins.pump.common.defs.PumpDriverState
 import info.nightscout.androidaps.plugins.pump.common.events.EventRileyLinkDeviceStatusChange
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.RileyLinkConst
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.defs.RileyLinkPumpDevice
@@ -19,10 +16,6 @@ import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.service.Riley
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.service.tasks.ResetRileyLinkConfigurationTask
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.service.tasks.ServiceTaskExecutor
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.service.tasks.WakeAndTuneTask
-import info.nightscout.androidaps.plugins.pump.common.sync.PumpDbEntryTBR
-import info.nightscout.androidaps.plugins.pump.common.sync.PumpSyncEntriesCreator
-import info.nightscout.androidaps.plugins.pump.common.sync.PumpSyncStorage
-import info.nightscout.androidaps.plugins.pump.common.utils.ProfileUtil
 import info.nightscout.androidaps.plugins.pump.medtronic.comm.history.pump.PumpHistoryEntry
 import info.nightscout.androidaps.plugins.pump.medtronic.comm.history.pump.PumpHistoryResult
 import info.nightscout.androidaps.plugins.pump.medtronic.data.MedtronicHistoryData
@@ -44,7 +37,6 @@ import info.nightscout.androidaps.plugins.pump.medtronic.service.RileyLinkMedtro
 import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicConst
 import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicUtil
 import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicUtil.Companion.isSame
-import info.nightscout.core.events.EventNewNotification
 import info.nightscout.core.utils.DateTimeUtil
 import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.interfaces.notifications.Notification
@@ -62,8 +54,13 @@ import info.nightscout.interfaces.pump.actions.CustomActionType
 import info.nightscout.interfaces.pump.defs.ManufacturerType
 import info.nightscout.interfaces.pump.defs.PumpType
 import info.nightscout.interfaces.queue.CommandQueue
-import info.nightscout.interfaces.ui.ActivityNames
+import info.nightscout.interfaces.ui.UiInteraction
 import info.nightscout.interfaces.utils.TimeChangeType
+import info.nightscout.pump.common.data.PumpStatus
+import info.nightscout.pump.common.defs.PumpDriverState
+import info.nightscout.pump.common.sync.PumpDbEntryTBR
+import info.nightscout.pump.common.sync.PumpSyncStorage
+import info.nightscout.pump.common.utils.ProfileUtil
 import info.nightscout.rx.AapsSchedulers
 import info.nightscout.rx.bus.RxBus
 import info.nightscout.rx.events.EventRefreshButtonState
@@ -104,23 +101,23 @@ class MedtronicPumpPlugin @Inject constructor(
     private val medtronicHistoryData: MedtronicHistoryData,
     private val rileyLinkServiceData: RileyLinkServiceData,
     private val serviceTaskExecutor: ServiceTaskExecutor,
-    private val activityNames: ActivityNames,
+    private val uiInteraction: UiInteraction,
     dateUtil: DateUtil,
     aapsSchedulers: AapsSchedulers,
     pumpSync: PumpSync,
     pumpSyncStorage: PumpSyncStorage
-) : PumpPluginAbstract(
+) : info.nightscout.pump.common.PumpPluginAbstract(
     PluginDescription() //
         .mainType(PluginType.PUMP) //
         .fragmentClass(MedtronicFragment::class.java.name) //
-        .pluginIcon(R.drawable.ic_veo_128)
+        .pluginIcon(info.nightscout.core.ui.R.drawable.ic_veo_128)
         .pluginName(R.string.medtronic_name) //
         .shortName(R.string.medtronic_name_short) //
         .preferencesId(R.xml.pref_medtronic)
         .description(R.string.description_pump_medtronic),  //
     PumpType.MEDTRONIC_522_722,  // we default to most basic model, correct model from config is loaded later
     injector, rh, aapsLogger, commandQueue, rxBus, activePlugin, sp, context, fabricPrivacy, dateUtil, aapsSchedulers, pumpSync, pumpSyncStorage
-), Pump, RileyLinkPumpDevice, PumpSyncEntriesCreator {
+), Pump, RileyLinkPumpDevice, info.nightscout.pump.common.sync.PumpSyncEntriesCreator {
 
     private var rileyLinkMedtronicService: RileyLinkMedtronicService? = null
 
@@ -171,9 +168,9 @@ class MedtronicPumpPlugin @Inject constructor(
 
     override fun updatePreferenceSummary(pref: Preference) {
         super.updatePreferenceSummary(pref)
-        if (pref.key == rh.gs(R.string.key_rileylink_mac_address)) {
-            val value = sp.getStringOrNull(R.string.key_rileylink_mac_address, null)
-            pref.summary = value ?: rh.gs(R.string.not_set_short)
+        if (pref.key == rh.gs(info.nightscout.androidaps.plugins.pump.common.hw.rileylink.R.string.key_rileylink_mac_address)) {
+            val value = sp.getStringOrNull(info.nightscout.androidaps.plugins.pump.common.hw.rileylink.R.string.key_rileylink_mac_address, null)
+            pref.summary = value ?: rh.gs(info.nightscout.core.ui.R.string.not_set_short)
         }
     }
 
@@ -217,10 +214,6 @@ class MedtronicPumpPlugin @Inject constructor(
         if ("Local 4b6b Encoding" == encoding) {
             sp.putString(MedtronicConst.Prefs.Encoding, rh.gs(R.string.key_medtronic_pump_encoding_4b6b_local))
         }
-    }
-
-    override fun hasService(): Boolean {
-        return true
     }
 
     override fun onStartScheduledPumpActions() {
@@ -580,8 +573,7 @@ class MedtronicPumpPlugin @Inject constructor(
                 aapsLogger.info(LTag.PUMP, String.format(Locale.ENGLISH, "MedtronicPumpPlugin::checkTimeAndOptionallySetTime - Time difference is %d s. Set time on pump.", timeDiff))
                 rileyLinkMedtronicService?.medtronicUIComm?.executeCommand(MedtronicCommandType.SetRealTimeClock)
                 if (clock.timeDifference == 0) {
-                    val notification = Notification(Notification.INSIGHT_DATE_TIME_UPDATED, rh.gs(R.string.pump_time_updated), Notification.INFO, 60)
-                    rxBus.send(EventNewNotification(notification))
+                    uiInteraction.addNotificationValidFor(Notification.INSIGHT_DATE_TIME_UPDATED, rh.gs(R.string.pump_time_updated), Notification.INFO, 60)
                 }
             } else {
                 if (clock.localDeviceTime.year > 2015) {
@@ -650,7 +642,7 @@ class MedtronicPumpPlugin @Inject constructor(
                     // LOG.debug("MedtronicPumpPlugin::deliverBolus - Delivery Canceled after Bolus started.");
                     Thread {
                         SystemClock.sleep(2000)
-                        activityNames.runAlarm(context, rh.gs(R.string.medtronic_cmd_cancel_bolus_not_supported), rh.gs(R.string.medtronic_warning), R.raw.boluserror)
+                        uiInteraction.runAlarm(rh.gs(R.string.medtronic_cmd_cancel_bolus_not_supported), rh.gs(R.string.medtronic_warning), info.nightscout.core.ui.R.raw.boluserror)
                     }.start()
                 }
                 val now = System.currentTimeMillis()
@@ -668,10 +660,7 @@ class MedtronicPumpPlugin @Inject constructor(
                 val time = now + bolusTime * 1000
                 busyTimestamps.add(time)
                 setEnableCustomAction(MedtronicCustomActionType.ClearBolusBlock, true)
-                PumpEnactResult(injector).success(true) //
-                    .enacted(true) //
-                    .bolusDelivered(detailedBolusInfo.insulin) //
-                    .carbsDelivered(detailedBolusInfo.carbs)
+                PumpEnactResult(injector).success(true).enacted(true).bolusDelivered(detailedBolusInfo.insulin)
             }
         } finally {
             finishAction("Bolus")
@@ -1206,7 +1195,7 @@ class MedtronicPumpPlugin @Inject constructor(
                 if (rileyLinkMedtronicService?.verifyConfiguration() == true) {
                     serviceTaskExecutor.startTask(WakeAndTuneTask(injector))
                 } else {
-                    activityNames.runAlarm(context, rh.gs(R.string.medtronic_error_operation_not_possible_no_configuration), rh.gs(R.string.medtronic_warning), R.raw.boluserror)
+                    uiInteraction.runAlarm(rh.gs(R.string.medtronic_error_operation_not_possible_no_configuration), rh.gs(R.string.medtronic_warning), info.nightscout.core.ui.R.raw.boluserror)
                 }
             }
 

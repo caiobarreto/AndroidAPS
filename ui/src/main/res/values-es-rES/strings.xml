@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="constraint_applied">Restricción aplicada!</string>
     <string name="bolus_constraint_applied">Restricción aplicada en bolo</string>
     <string name="carbs_constraint_applied">Restricción aplicada en carbohidratos</string>
     <string name="temp_target_short">OT</string>
@@ -18,6 +17,7 @@
     <!--     Activities-->
     <string name="activity_monitor">Monitor de actividad</string>
     <string name="do_you_want_reset_stats">¿Desea restablecer las estadísticas de actividad?</string>
+    <string name="do_you_want_reset_tdd_stats">¿Desea restablecer las estadísticas de TDD?</string>
     <string name="statistics">Estadísticas</string>
     <string name="calculation_in_progress">Cálculo en curso</string>
     <string name="invalid_age">Entrada de edad no válida</string>
@@ -36,14 +36,9 @@
     <string name="format_bg_isf">%1$s ISF: %2$.1f</string>
     <string name="format_cob_ic">%1$.1fg IC: %2$.1f</string>
     <string name="format_carbs_ic">%1$.0fg IC: %2$.1f</string>
-    <string name="superbolus">Superbolo</string>
     <string name="treatments_wizard_total_label">Total</string>
     <!-- FillDialog -->
     <string name="fill_warning">Por favor, asegúrate de que la cantidad coincide con la especificada en el set de infusión!</string>
-    <string name="fill_bolus_title">Cebar/Llenar la cantidad de insulina estándar</string>
-    <string name="button1">Botón 1</string>
-    <string name="button2">Botón 2</string>
-    <string name="button3">Botón 3</string>
     <string name="record_pump_site_change">Anotar el cambio de sitio de la bomba</string>
     <string name="record_insulin_cartridge_change">Anotar cambio del cartucho de insulina</string>
     <!-- InsulinDialog -->
@@ -53,10 +48,10 @@
     <string name="timeshift_label">Cambio de hora</string>
     <string name="percentage_label">Porcentaje</string>
     <!-- LoopDialog -->
-    <string name="suspendloopfor1h">Suspender lazo durante 1 hora</string>
-    <string name="suspendloopfor2h">Suspender lazo durante 2 horas</string>
-    <string name="suspendloopfor3h">Suspender lazo durante 3 horas</string>
-    <string name="suspendloopfor10h">Suspender lazo durante 10 horas</string>
+    <string name="suspendloopfor1h">Suspender bucle durante 1 hora</string>
+    <string name="suspendloopfor2h">Suspender bucle durante 2 horas</string>
+    <string name="suspendloopfor3h">Suspender bucle durante 3 horas</string>
+    <string name="suspendloopfor10h">Suspender bucle durante 10 horas</string>
     <string name="disconnectpump">Desconectar bomba</string>
     <string name="disconnectpumpfor15m">Desconectar la bomba durante 15 minutos</string>
     <string name="disconnectpumpfor30m">Desconectar la bomba durante 30 minutos</string>
@@ -93,8 +88,6 @@
     <string name="tempbasals_netratio_label_string">Relación:</string>
     <string name="tempbasals_netinsulin_label_string">Ins:</string>
     <string name="tempbasals_iob_label_string">IOB:</string>
-    <string name="tempbasals_iobtotal_label_string">IOB Total:</string>
-    <string name="treatments_wizard_tt_label">OT</string>
     <string name="treatments_wizard_correction_label">Corrección</string>
     <string name="meal_bolus">Comida</string>
     <string name="prime">Cebar</string>
@@ -108,12 +101,12 @@
     <string name="show_invalidated">Mostrar invalidados</string>
     <string name="hide_invalidated">Ocultar invalidados</string>
     <string name="careportal_remove_started_events">Eliminar registros de inicio de AAPS</string>
-    <string name="hide_loop">Ocultar lazo</string>
-    <string name="show_loop">Mostrar lazo</string>
+    <string name="hide_loop">Ocultar bucle</string>
+    <string name="show_loop">Mostrar bucle</string>
     <string name="user_entry">Registro por parte del usuario</string>
     <string name="clone_label">Duplicar</string>
-    <string name="show_loop_records">Mostrar registros del lazo</string>
-    <string name="show_hide_records">Ocultar registros del lazo</string>
+    <string name="show_loop_records">Mostrar registros del bucle</string>
+    <string name="show_hide_records">Ocultar registros del bucle</string>
     <!-- ProfileHelperActivity -->
     <string name="profile1">Perfil 1</string>
     <string name="profile2">Perfil 2</string>
@@ -125,21 +118,14 @@
     <string name="motol_default_profile">Perfil predeterminado</string>
     <string name="current_profile">Perfil actual</string>
     <string name="available_profile">Perfil disponible</string>
-    <string name="format_with_tdd">Edad: %1$.0f TDD: %2$.0f U</string>
-    <string name="format_with_tdd_and_pct">Edad: %1$.0f TDD: %2$.0f U %3$d%%</string>
-    <string name="format_with_weight">Edad: %1$.0f Peso: %2$.0f kg</string>
+    <string name="format_with_tdd">Edad: %1$d TDD: %2$.0f U</string>
+    <string name="format_with_tdd_and_pct">Edad: %1$d TDD: %2$.0f U %3$d%%</string>
+    <string name="format_with_weight">Edad: %1$d Peso: %2$.0f kg</string>
     <string name="dpv_default_profile">Perfil DPV por defecto</string>
     <string name="invalid_pct">Entrada % inválida</string>
     <!-- Other dialogs -->
     <string name="basal_rate">Tasa basal</string>
     <!--    BolusProgressDialog-->
-    <!--    PrefImport-->
-    <string name="check_preferences_details_btn">Explicar problemas de importación…</string>
-    <string name="check_preferences_details_title">Importar detalles del problema</string>
-    <string name="check_preferences_import_btn">Importar</string>
-    <string name="check_preferences_import_anyway_btn">Importar de todos modos (¡PELIGROSO!)</string>
-    <string name="import_setting">Importar ajustes</string>
-    <string name="check_preferences_before_import">Por favor, comprueba los ajustes antes de importar:</string>
-    <string name="check_preferences_cannot_import">¡Las preferencias no se pueden importar!</string>
-    <string name="check_preferences_dangerous_import">¡Las preferencias no se deben importar!</string>
+    <string name="stop_pressed">DETENER PRESIONADO</string>
+    <!--QuickWizard-->
 </resources>

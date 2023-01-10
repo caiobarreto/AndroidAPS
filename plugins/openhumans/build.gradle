@@ -6,11 +6,11 @@ plugins {
     id 'com.hiya.jacoco-android'
 }
 
-apply from: "${project.rootDir}/core/core-main/android_dependencies.gradle"
-apply from: "${project.rootDir}/core/core-main/android_module_dependencies.gradle"
-apply from: "${project.rootDir}/core/core-main/allopen_dependencies.gradle"
-apply from: "${project.rootDir}/core/core-main/test_dependencies.gradle"
-apply from: "${project.rootDir}/core/core-main/jacoco_global.gradle"
+apply from: "${project.rootDir}/core/main/android_dependencies.gradle"
+apply from: "${project.rootDir}/core/main/android_module_dependencies.gradle"
+apply from: "${project.rootDir}/core/main/allopen_dependencies.gradle"
+apply from: "${project.rootDir}/core/main/test_dependencies.gradle"
+apply from: "${project.rootDir}/core/main/jacoco_global.gradle"
 android {
     namespace 'info.nightscout.androidaps.plugin.general.openhumans'
 }
@@ -19,8 +19,7 @@ android {
 dependencies {
     implementation project(':database:entities')
     implementation project(':database:impl')
-    implementation project(':interfaces')
-    implementation project(':app-wear-shared:rx')
+    implementation project(':core:interfaces')
     implementation project(':app-wear-shared:shared')
 
     api "com.squareup.okhttp3:okhttp:$okhttp3_version"
@@ -29,7 +28,6 @@ dependencies {
     api "androidx.browser:browser:1.4.0"
 
     //WorkManager
-    api "androidx.work:work-runtime:$work_version"
     api "androidx.work:work-runtime-ktx:$work_version"
     //api "androidx.work:work-rxjava3:$work_version"
     //api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'

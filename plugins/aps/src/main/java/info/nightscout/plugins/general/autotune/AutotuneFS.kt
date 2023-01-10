@@ -1,7 +1,7 @@
 package info.nightscout.plugins.general.autotune
 
+import info.nightscout.androidaps.annotations.OpenForTesting
 import info.nightscout.interfaces.logging.LoggerUtils
-import info.nightscout.plugins.aps.R
 import info.nightscout.plugins.general.autotune.data.ATProfile
 import info.nightscout.plugins.general.autotune.data.PreppedGlucose
 import info.nightscout.shared.interfaces.ResourceHelper
@@ -23,6 +23,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+@OpenForTesting
 class AutotuneFS @Inject constructor(
     private val  rh: ResourceHelper,
     private val loggerUtils: LoggerUtils
@@ -88,14 +89,14 @@ class AutotuneFS @Inject constructor(
     }
 
     fun exportPumpProfile(profile: ATProfile) {
-        createAutotunefile(PUMPPROFILE, profile.profiletoOrefJSON(), true)
-        createAutotunefile(PUMPPROFILE, profile.profiletoOrefJSON())
+        createAutotunefile(PUMPPROFILE, profile.profileToOrefJSON(), true)
+        createAutotunefile(PUMPPROFILE, profile.profileToOrefJSON())
     }
 
     fun exportTunedProfile(tunedProfile: ATProfile) {
-        createAutotunefile(TUNEDPROFILE + formatDate(tunedProfile.from) + ".json", tunedProfile.profiletoOrefJSON())
+        createAutotunefile(TUNEDPROFILE + formatDate(tunedProfile.from) + ".json", tunedProfile.profileToOrefJSON())
         try {
-            createAutotunefile(rh.gs(R.string.autotune_tunedprofile_name) + ".json", tunedProfile.profiletoOrefJSON(), true)
+            createAutotunefile(rh.gs(info.nightscout.core.ui.R.string.autotune_tunedprofile_name) + ".json", tunedProfile.profileToOrefJSON(), true)
         } catch (e: JSONException) {
         }
     }

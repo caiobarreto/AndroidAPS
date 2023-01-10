@@ -8,10 +8,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
-import info.nightscout.core.main.R
 import info.nightscout.interfaces.NotificationHolder
-import info.nightscout.interfaces.ui.ActivityNames
 import info.nightscout.interfaces.ui.IconsProvider
+import info.nightscout.interfaces.ui.UiInteraction
 import info.nightscout.shared.interfaces.ResourceHelper
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,7 +20,7 @@ class NotificationHolderImpl @Inject constructor(
     private val rh: ResourceHelper,
     private val context: Context,
     private val iconsProvider: IconsProvider,
-    private val activityNames: ActivityNames
+    private val uiInteraction: UiInteraction
 ) : NotificationHolder {
 
     override val channelID = "AndroidAPS-Ongoing"
@@ -34,8 +33,8 @@ class NotificationHolderImpl @Inject constructor(
         get() = _notification ?: placeholderNotification()
 
     override fun openAppIntent(context: Context): PendingIntent? = TaskStackBuilder.create(context).run {
-        addParentStack(activityNames.mainActivity)
-        addNextIntent(Intent(context, activityNames.mainActivity))
+        addParentStack(uiInteraction.mainActivity)
+        addNextIntent(Intent(context, uiInteraction.mainActivity))
         getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
@@ -49,7 +48,7 @@ class NotificationHolderImpl @Inject constructor(
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setSmallIcon(iconsProvider.getNotificationIcon())
             .setLargeIcon(rh.decodeResource(iconsProvider.getIcon()))
-            .setContentTitle(rh.gs(R.string.loading))
+            .setContentTitle(rh.gs(info.nightscout.core.ui.R.string.loading))
             .setContentIntent(openAppIntent(context))
             .build()
             .also {

@@ -30,16 +30,14 @@ import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.BasalVa
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.BolusRecord
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.BolusType
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.TempBasalRecord
+import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.database.DashHistoryDatabase
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.ui.OmnipodDashOverviewFragment
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.util.Constants
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.util.mapProfileToBasalProgram
-import info.nightscout.core.events.EventNewNotification
-import info.nightscout.core.pump.convertedToAbsolute
-import info.nightscout.core.pump.plannedRemainingMinutes
-import info.nightscout.core.pump.toStringFull
 import info.nightscout.core.utils.DateTimeUtil
 import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.interfaces.notifications.Notification
+import info.nightscout.interfaces.plugin.OwnDatabasePlugin
 import info.nightscout.interfaces.plugin.PluginDescription
 import info.nightscout.interfaces.plugin.PluginType
 import info.nightscout.interfaces.profile.Profile
@@ -58,7 +56,7 @@ import info.nightscout.interfaces.pump.defs.PumpType
 import info.nightscout.interfaces.queue.Command
 import info.nightscout.interfaces.queue.CommandQueue
 import info.nightscout.interfaces.queue.CustomCommand
-import info.nightscout.interfaces.ui.ActivityNames
+import info.nightscout.interfaces.ui.UiInteraction
 import info.nightscout.interfaces.utils.DecimalFormatter.to0Decimal
 import info.nightscout.interfaces.utils.DecimalFormatter.to2Decimal
 import info.nightscout.interfaces.utils.Round
@@ -104,12 +102,13 @@ class OmnipodDashPumpPlugin @Inject constructor(
     private val aapsSchedulers: AapsSchedulers,
     private val fabricPrivacy: FabricPrivacy,
     private val dateUtil: DateUtil,
-    private val activityNames: ActivityNames,
+    private val uiInteraction: UiInteraction,
     injector: HasAndroidInjector,
     aapsLogger: AAPSLogger,
     rh: ResourceHelper,
-    commandQueue: CommandQueue
-) : PumpPluginBase(pluginDescription, injector, aapsLogger, rh, commandQueue), Pump, OmnipodDash {
+    commandQueue: CommandQueue,
+    private val dashHistoryDatabase: DashHistoryDatabase
+) : PumpPluginBase(pluginDescription, injector, aapsLogger, rh, commandQueue), Pump, OmnipodDash, OwnDatabasePlugin {
 
     @Volatile var bolusCanceled = false
     @Volatile var bolusDeliveryInProgress = false
@@ -130,7 +129,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
         private val pluginDescription = PluginDescription()
             .mainType(PluginType.PUMP)
             .fragmentClass(OmnipodDashOverviewFragment::class.java.name)
-            .pluginIcon(R.drawable.ic_pod_128)
+            .pluginIcon(info.nightscout.core.ui.R.drawable.ic_pod_128)
             .pluginName(R.string.omnipod_dash_name)
             .shortName(R.string.omnipod_dash_name_short)
             .preferencesId(R.xml.omnipod_dash_preferences)
@@ -182,34 +181,28 @@ class OmnipodDashPumpPlugin @Inject constructor(
     private fun updatePodWarnings() {
         if (System.currentTimeMillis() > nextPodWarningCheck) {
             if (!podStateManager.isPodRunning) {
-                val notification =
-                    Notification(
-                        Notification.OMNIPOD_POD_NOT_ATTACHED,
-                        "Pod not activated",
-                        Notification.NORMAL
-                    )
-                rxBus.send(EventNewNotification(notification))
+                uiInteraction.addNotification(
+                    Notification.OMNIPOD_POD_NOT_ATTACHED,
+                    "Pod not activated",
+                    Notification.NORMAL
+                )
             } else {
                 rxBus.send(EventDismissNotification(Notification.OMNIPOD_POD_NOT_ATTACHED))
                 if (podStateManager.isSuspended) {
                     showNotification(
                         Notification.OMNIPOD_POD_SUSPENDED,
-                        "Insulin delivery suspended",
+                        rh.gs(R.string.insulin_delivery_suspended),
                         Notification.NORMAL,
-                        R.raw.boluserror
+                        info.nightscout.core.ui.R.raw.boluserror
                     )
                 } else {
                     rxBus.send(EventDismissNotification(Notification.OMNIPOD_POD_SUSPENDED))
                     if (!podStateManager.sameTimeZone) {
-                        val notification =
-                            Notification(
-                                Notification.OMNIPOD_TIME_OUT_OF_SYNC,
-                                "Timezone on pod is different from the timezone on phone. " +
-                                    "Basal rate is incorrect" +
-                                    "Switch profile to fix",
-                                Notification.NORMAL
-                            )
-                        rxBus.send(EventNewNotification(notification))
+                        uiInteraction.addNotification(
+                            Notification.OMNIPOD_TIME_OUT_OF_SYNC,
+                            rh.gs(R.string.timezone_on_pod_is_different_from_the_timezone),
+                            Notification.NORMAL
+                        )
                     }
                 }
             }
@@ -377,7 +370,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
                             Notification.OMNIPOD_POD_FAULT,
                             it.toString(),
                             Notification.URGENT,
-                            R.raw.boluserror
+                            info.nightscout.core.ui.R.raw.boluserror
                         )
                     }
                     pumpSync.insertAnnouncement(
@@ -430,22 +423,21 @@ class OmnipodDashPumpPlugin @Inject constructor(
             if (deliverySuspended) {
                 showNotification(
                     Notification.FAILED_UPDATE_PROFILE,
-                    "Failed to set the new basal profile. Delivery suspended",
+                    rh.gs(R.string.failed_to_set_the_new_basal_profile),
                     Notification.URGENT,
-                    R.raw.boluserror
+                    info.nightscout.core.ui.R.raw.boluserror
                 )
             } else {
                 showNotification(
                     Notification.FAILED_UPDATE_PROFILE,
-                    "Setting basal profile might have failed. Delivery might be suspended!" +
-                        " Please manually refresh the Pod status from the Omnipod tab and resume delivery if needed.",
+                    rh.gs(R.string.setting_basal_profile_might_have_failed),
                     Notification.URGENT,
-                    R.raw.boluserror
+                    info.nightscout.core.ui.R.raw.boluserror
                 )
             }
             Completable.error(java.lang.IllegalStateException("Command not confirmed"))
         } else {
-            showNotification(Notification.PROFILE_SET_OK, "Profile set OK", Notification.INFO, null)
+            showNotification(Notification.PROFILE_SET_OK, rh.gs(R.string.profile_set_ok), Notification.INFO, null)
 
             Completable.complete()
         }
@@ -471,9 +463,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
             ).doOnComplete {
                 notifyOnUnconfirmed(
                     Notification.FAILED_UPDATE_PROFILE,
-                    "Suspend delivery is unconfirmed! " +
-                        "Please manually refresh the Pod status from the Omnipod tab and resume delivery if needed.",
-                    R.raw.boluserror,
+                    rh.gs(R.string.suspend_delivery_is_unconfirmed),
+                    info.nightscout.core.ui.R.raw.boluserror,
                 )
             }
     }
@@ -487,10 +478,10 @@ class OmnipodDashPumpPlugin @Inject constructor(
             .observeOn(aapsSchedulers.main)
             .subscribe(
                 {
-                    if (it.isChanged(rh.gs(R.string.key_omnipod_common_expiration_reminder_enabled)) ||
-                        it.isChanged(rh.gs(R.string.key_omnipod_common_expiration_reminder_hours_before_shutdown)) ||
-                        it.isChanged(rh.gs(R.string.key_omnipod_common_low_reservoir_alert_enabled)) ||
-                        it.isChanged(rh.gs(R.string.key_omnipod_common_low_reservoir_alert_units))
+                    if (it.isChanged(rh.gs(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_expiration_reminder_enabled)) ||
+                        it.isChanged(rh.gs(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_expiration_reminder_hours_before_shutdown)) ||
+                        it.isChanged(rh.gs(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_low_reservoir_alert_enabled)) ||
+                        it.isChanged(rh.gs(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_low_reservoir_alert_units))
                     ) {
                         commandQueue.customCommand(CommandUpdateAlertConfiguration(), null)
                     }
@@ -595,9 +586,9 @@ class OmnipodDashPumpPlugin @Inject constructor(
             var deliveredBolusAmount = 0.0
 
             val beepsConfigurationKey = if (detailedBolusInfo.bolusType == DetailedBolusInfo.BolusType.SMB)
-                R.string.key_omnipod_common_smb_beeps_enabled
+                info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_smb_beeps_enabled
             else
-                R.string.key_omnipod_common_bolus_beeps_enabled
+                info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_bolus_beeps_enabled
             val bolusBeeps = sp.getBoolean(beepsConfigurationKey, false)
             aapsLogger.info(
                 LTag.PUMP,
@@ -637,19 +628,19 @@ class OmnipodDashPumpPlugin @Inject constructor(
                         Notification.OMNIPOD_UNCERTAIN_SMB,
                         "Unable to verify whether SMB bolus ($requestedBolusAmount U) succeeded. " +
                             "<b>Refresh pod status to confirm or deny this command.",
-                        R.raw.boluserror
+                        info.nightscout.core.ui.R.raw.boluserror
                     )
                 } else {
                     if (podStateManager.activeCommand != null) {
                         val sound =
                             if (sp.getBoolean(
-                                    R.string
+                                    info.nightscout.androidaps.plugins.pump.omnipod.common.R.string
                                         .key_omnipod_common_notification_uncertain_bolus_sound_enabled, true
                                 )
-                            ) R.raw.boluserror
+                            ) info.nightscout.core.ui.R.raw.boluserror
                             else 0
 
-                        showErrorDialog("Bolus delivery status uncertain. Refresh pod status to confirm or deny.", sound)
+                        showErrorDialog(rh.gs(R.string.bolus_delivery_status_uncertain), sound)
                     }
                 }
             }.toSingle {
@@ -723,13 +714,13 @@ class OmnipodDashPumpPlugin @Inject constructor(
             }
             val percent = (waited.toFloat() / estimatedDeliveryTimeSeconds) * 100
             updateBolusProgressDialog(
-                rh.gs(R.string.bolus_delivered, Round.roundTo(percent*requestedBolusAmount/100, PodConstants.POD_PULSE_BOLUS_UNITS), requestedBolusAmount),
+                rh.gs(info.nightscout.pump.common.R.string.bolus_delivered_so_far, Round.roundTo(percent*requestedBolusAmount/100, PodConstants.POD_PULSE_BOLUS_UNITS), requestedBolusAmount),
                 percent.toInt()
             )
         }
 
         for (tryNumber in 1..BOLUS_RETRIES) {
-            updateBolusProgressDialog("Checking delivery status", 100)
+            updateBolusProgressDialog(rh.gs(R.string.checking_delivery_status), 100)
 
             val cmd = if (bolusCanceled)
                 cancelBolus()
@@ -754,7 +745,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
                 val remainingUnits = podStateManager.lastBolus!!.bolusUnitsRemaining
                 val percent = ((requestedBolusAmount - remainingUnits) / requestedBolusAmount) * 100
                 updateBolusProgressDialog(
-                    rh.gs(R.string.bolus_delivered, Round.roundTo(requestedBolusAmount - remainingUnits, PodConstants.POD_PULSE_BOLUS_UNITS), requestedBolusAmount),
+                    rh.gs(info.nightscout.pump.common.R.string.bolus_delivered_so_far, Round.roundTo(requestedBolusAmount - remainingUnits, PodConstants.POD_PULSE_BOLUS_UNITS), requestedBolusAmount),
                     percent.toInt()
                 )
 
@@ -772,7 +763,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
     }
 
     private fun cancelBolus(): Completable {
-        val bolusBeeps = sp.getBoolean(R.string.key_omnipod_common_bolus_beeps_enabled, false)
+        val bolusBeeps = sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_bolus_beeps_enabled, false)
         return executeProgrammingCommand(
             historyEntry = history.createRecord(commandType = OmnipodCommandType.CANCEL_BOLUS),
             command = omnipodManager.stopBolus(bolusBeeps).ignoreElements(),
@@ -861,9 +852,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
         ).doOnComplete {
             notifyOnUnconfirmed(
                 Notification.OMNIPOD_TBR_ALERTS,
-                "Setting temp basal might have basal failed. If a temp basal was previously running, " +
-                    "it has been cancelled. Please manually refresh the Pod status from the Omnipod tab.",
-                R.raw.boluserror,
+                rh.gs(R.string.setting_temp_basal_might_have_basal_failed),
+                info.nightscout.core.ui.R.raw.boluserror,
             )
         }.toPumpEnactResultImpl()
 
@@ -922,10 +912,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
                 ).doOnComplete {
                     notifyOnUnconfirmed(
                         Notification.OMNIPOD_TBR_ALERTS,
-                        "Cancelling temp basal might have failed." +
-                            "If a temp basal was previously running, it might have been cancelled." +
-                            "Please manually refresh the Pod status from the Omnipod tab.", // TODO: i8n
-                        R.raw.boluserror,
+                        rh.gs(R.string.cancelling_temp_basal_might_have_failed),
+                        info.nightscout.core.ui.R.raw.boluserror,
                     )
                 }
             }
@@ -951,11 +939,11 @@ class OmnipodDashPumpPlugin @Inject constructor(
     }
 
     private fun hasTempBasalBeepEnabled(): Boolean {
-        return sp.getBoolean(R.string.key_omnipod_common_tbr_beeps_enabled, false)
+        return sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_tbr_beeps_enabled, false)
     }
 
     private fun hasBasalBeepEnabled(): Boolean {
-        return sp.getBoolean(R.string.key_omnipod_common_basal_beeps_enabled, false)
+        return sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_basal_beeps_enabled, false)
     }
 
     override fun cancelTempBasal(enforceNew: Boolean): PumpEnactResult {
@@ -972,8 +960,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
         ).doOnComplete {
             notifyOnUnconfirmed(
                 Notification.OMNIPOD_TBR_ALERTS,
-                "Cancel temp basal result is uncertain", // TODO: i8n,
-                R.raw.boluserror, // TODO: add setting for this
+                rh.gs(R.string.cancel_temp_basal_result_is_uncertain),
+                info.nightscout.core.ui.R.raw.boluserror, // TODO: add setting for this
             )
         }.toPumpEnactResultImpl()
     }
@@ -1064,29 +1052,29 @@ class OmnipodDashPumpPlugin @Inject constructor(
 
     override fun shortStatus(veryShort: Boolean): String {
         if (!podStateManager.isActivationCompleted) {
-            return rh.gs(R.string.omnipod_common_short_status_no_active_pod)
+            return rh.gs(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.omnipod_common_short_status_no_active_pod)
         }
         var ret = ""
         if (podStateManager.lastUpdatedSystem != 0L) {
             val agoMsec: Long = System.currentTimeMillis() - podStateManager.lastUpdatedSystem
             val agoMin = (agoMsec / 60.0 / 1000.0).toInt()
-            ret += rh.gs(R.string.omnipod_common_short_status_last_connection, agoMin) + "\n"
+            ret += rh.gs(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.omnipod_common_short_status_last_connection, agoMin) + "\n"
         }
         podStateManager.lastBolus?.run {
             ret += rh.gs(
-                R.string.omnipod_common_short_status_last_bolus, to2Decimal(this.deliveredUnits() ?: this.requestedUnits),
+                info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.omnipod_common_short_status_last_bolus, to2Decimal(this.deliveredUnits() ?: this.requestedUnits),
                 DateFormat.format("HH:mm", Date(this.startTime))
             ) + "\n"
         }
         val temporaryBasal = pumpSync.expectedPumpState().temporaryBasal
         temporaryBasal?.run {
             ret += rh.gs(
-                R.string.omnipod_common_short_status_temp_basal,
+                info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.omnipod_common_short_status_temp_basal,
                 this.toStringFull(dateUtil)
             ) + "\n"
         }
         ret += rh.gs(
-            R.string.omnipod_common_short_status_reservoir,
+            info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.omnipod_common_short_status_reservoir,
             podStateManager.pulsesRemaining?.let { to0Decimal(reservoirLevel) } ?: "50+"
         )
         return ret.trim()
@@ -1134,7 +1122,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
                 aapsLogger.warn(LTag.PUMP, "Unsupported custom command: " + customCommand.javaClass.name)
                 PumpEnactResult(injector).success(false).enacted(false).comment(
                     rh.gs(
-                        R.string.omnipod_common_error_unsupported_custom_command,
+                        info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.omnipod_common_error_unsupported_custom_command,
                         customCommand.javaClass.name
                     )
                 )
@@ -1193,8 +1181,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
             ).doFinally {
                 notifyOnUnconfirmed(
                     Notification.FAILED_UPDATE_PROFILE,
-                    "Unconfirmed resumeDelivery command. Please refresh pod status",
-                    R.raw.boluserror
+                    rh.gs(R.string.unconfirmed_resumedelivery_command_please_refresh_pod_status),
+                    info.nightscout.core.ui.R.raw.boluserror
                 )
             }.toPumpEnactResultImpl()
         } ?: PumpEnactResult(injector).success(false).enacted(false).comment("No profile active") // TODO i18n
@@ -1228,10 +1216,10 @@ class OmnipodDashPumpPlugin @Inject constructor(
 
     private fun updateAlertConfiguration(): PumpEnactResult {
 
-        val expirationReminderEnabled = sp.getBoolean(R.string.key_omnipod_common_expiration_reminder_enabled, true)
-        val expirationHours = sp.getInt(R.string.key_omnipod_common_expiration_reminder_hours_before_shutdown, 7)
-        val lowReservoirAlertEnabled = sp.getBoolean(R.string.key_omnipod_common_low_reservoir_alert_enabled, true)
-        val lowReservoirAlertUnits = sp.getInt(R.string.key_omnipod_common_low_reservoir_alert_units, 10)
+        val expirationReminderEnabled = sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_expiration_reminder_enabled, true)
+        val expirationHours = sp.getInt(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_expiration_reminder_hours_before_shutdown, 7)
+        val lowReservoirAlertEnabled = sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_low_reservoir_alert_enabled, true)
+        val lowReservoirAlertUnits = sp.getInt(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_low_reservoir_alert_units, 10)
 
         when {
             podStateManager.sameAlertSettings(
@@ -1501,30 +1489,29 @@ class OmnipodDashPumpPlugin @Inject constructor(
     }
 
     private fun showErrorDialog(message: String, sound: Int) {
-        activityNames.runAlarm(context, message, rh.gs(R.string.error), sound)
+        uiInteraction.runAlarm(message, rh.gs(info.nightscout.core.ui.R.string.error), sound)
     }
 
     private fun showNotification(id: Int, message: String, urgency: Int, sound: Int?) {
-        val notification = Notification(
+        uiInteraction.addNotificationWithSound(
             id,
             message,
-            urgency
+            urgency,
+            if (sound != null && soundEnabledForNotificationType(id)) sound else null
         )
-        if (sound != null && soundEnabledForNotificationType(id)) {
-            notification.soundId = sound
-        }
-        rxBus.send(EventNewNotification(notification))
     }
 
     private fun soundEnabledForNotificationType(notificationType: Int): Boolean {
         return when (notificationType) {
             Notification.OMNIPOD_TBR_ALERTS    ->
-                sp.getBoolean(R.string.key_omnipod_common_notification_uncertain_tbr_sound_enabled, true)
+                sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_notification_uncertain_tbr_sound_enabled, true)
             Notification.OMNIPOD_UNCERTAIN_SMB ->
-                sp.getBoolean(R.string.key_omnipod_common_notification_uncertain_smb_sound_enabled, true)
+                sp.getBoolean(info.nightscout.androidaps.plugins.pump.omnipod.common.R.string.key_omnipod_common_notification_uncertain_smb_sound_enabled, true)
             Notification.OMNIPOD_POD_SUSPENDED ->
                 sp.getBoolean(R.string.key_omnipod_common_notification_delivery_suspended_sound_enabled, true)
             else                               -> true
         }
     }
+
+    override fun clearAllTables() = dashHistoryDatabase.clearAllTables()
 }

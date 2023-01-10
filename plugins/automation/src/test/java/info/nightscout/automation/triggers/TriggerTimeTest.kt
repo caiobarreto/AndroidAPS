@@ -5,15 +5,15 @@ import info.nightscout.shared.utils.T
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 
 class TriggerTimeTest : TriggerTestBase() {
 
     var now = 1514766900000L
 
-    @Before fun mock() {
+    @BeforeEach fun mock() {
         `when`(dateUtil.now()).thenReturn(now)
     }
 
@@ -48,7 +48,7 @@ class TriggerTimeTest : TriggerTestBase() {
     }
 
     @Test fun friendlyNameTest() {
-        Assert.assertEquals(info.nightscout.core.main.R.string.time, TriggerTime(injector).friendlyName())
+        Assert.assertEquals(info.nightscout.core.ui.R.string.time, TriggerTime(injector).friendlyName())
     }
 
     @Test fun friendlyDescriptionTest() {

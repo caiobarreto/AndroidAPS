@@ -4,8 +4,8 @@ import info.nightscout.automation.R
 import info.nightscout.interfaces.plugin.PluginType
 import info.nightscout.interfaces.queue.Callback
 import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
@@ -14,12 +14,12 @@ class ActionLoopDisableTest : ActionsTestBase() {
 
     lateinit var sut: ActionLoopDisable
 
-    @Before
+    @BeforeEach
     fun setup() {
 
         testPumpPlugin.pumpDescription.isTempBasalCapable = true
-        `when`(context.getString(info.nightscout.core.main.R.string.disableloop)).thenReturn("Disable loop")
-        `when`(rh.gs(info.nightscout.core.main.R.string.disableloop)).thenReturn("Disable loop")
+        `when`(context.getString(info.nightscout.core.ui.R.string.disableloop)).thenReturn("Disable loop")
+        `when`(rh.gs(info.nightscout.core.ui.R.string.disableloop)).thenReturn("Disable loop")
         `when`(context.getString(R.string.alreadydisabled)).thenReturn("Already disabled")
 
         sut = ActionLoopDisable(injector)
@@ -27,7 +27,7 @@ class ActionLoopDisableTest : ActionsTestBase() {
 
     @Test
     fun friendlyNameTest() {
-        Assert.assertEquals(info.nightscout.core.main.R.string.disableloop, sut.friendlyName())
+        Assert.assertEquals(info.nightscout.core.ui.R.string.disableloop, sut.friendlyName())
     }
 
     @Test

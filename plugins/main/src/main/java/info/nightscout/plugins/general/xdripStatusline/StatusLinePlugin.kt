@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.extensions.toStringShort
+import info.nightscout.core.extensions.toStringShort
 import info.nightscout.core.iob.generateCOBString
 import info.nightscout.core.iob.round
 import info.nightscout.core.utils.fabric.FabricPrivacy
@@ -51,7 +51,7 @@ class StatusLinePlugin @Inject constructor(
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.GENERAL)
-        .pluginIcon((R.drawable.ic_blooddrop_48))
+        .pluginIcon((info.nightscout.core.main.R.drawable.ic_blooddrop_48))
         .pluginName(R.string.xdrip_status)
         .shortName(R.string.xdrip_status_shortname)
         .neverVisible(true)

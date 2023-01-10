@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.google.common.base.Joiner
-import info.nightscout.interfaces.logging.UserEntryLogger
 import info.nightscout.core.ui.dialogs.OKDialog
 import info.nightscout.core.ui.toast.ToastUtils
 import info.nightscout.core.utils.extensions.formatColor
@@ -14,6 +13,7 @@ import info.nightscout.database.entities.UserEntry
 import info.nightscout.database.entities.ValueWithUnit
 import info.nightscout.interfaces.constraints.Constraint
 import info.nightscout.interfaces.constraints.Constraints
+import info.nightscout.interfaces.logging.UserEntryLogger
 import info.nightscout.interfaces.plugin.ActivePlugin
 import info.nightscout.interfaces.profile.ProfileFunction
 import info.nightscout.interfaces.protection.ProtectionCheck
@@ -21,7 +21,7 @@ import info.nightscout.interfaces.pump.PumpSync
 import info.nightscout.interfaces.pump.defs.PumpDescription
 import info.nightscout.interfaces.queue.Callback
 import info.nightscout.interfaces.queue.CommandQueue
-import info.nightscout.interfaces.ui.ActivityNames
+import info.nightscout.interfaces.ui.UiInteraction
 import info.nightscout.interfaces.utils.HtmlHelper
 import info.nightscout.rx.logging.LTag
 import info.nightscout.shared.SafeParse
@@ -43,7 +43,7 @@ class TempBasalDialog : DialogFragmentWithDate() {
     @Inject lateinit var ctx: Context
     @Inject lateinit var uel: UserEntryLogger
     @Inject lateinit var protectionCheck: ProtectionCheck
-    @Inject lateinit var activityNames: ActivityNames
+    @Inject lateinit var uiInteraction: UiInteraction
 
     private var queryingProtection = false
     private var isPercentPump = true
@@ -119,23 +119,23 @@ class TempBasalDialog : DialogFragmentWithDate() {
         if (isPercentPump) {
             val basalPercentInput = SafeParse.stringToInt(binding.basalPercentInput.text)
             percent = constraintChecker.applyBasalPercentConstraints(Constraint(basalPercentInput), profile).value()
-            actions.add(rh.gs(R.string.tempbasal_label) + ": $percent%")
-            actions.add(rh.gs(R.string.duration) + ": " + rh.gs(R.string.format_mins, durationInMinutes))
-            if (percent != basalPercentInput) actions.add(rh.gs(R.string.constraint_applied))
+            actions.add(rh.gs(info.nightscout.core.ui.R.string.tempbasal_label) + ": $percent%")
+            actions.add(rh.gs(info.nightscout.core.ui.R.string.duration) + ": " + rh.gs(info.nightscout.core.ui.R.string.format_mins, durationInMinutes))
+            if (percent != basalPercentInput) actions.add(rh.gs(info.nightscout.core.ui.R.string.constraint_applied))
         } else {
             val basalAbsoluteInput = SafeParse.stringToDouble(binding.basalAbsoluteInput.text)
             absolute = constraintChecker.applyBasalConstraints(Constraint(basalAbsoluteInput), profile).value()
-            actions.add(rh.gs(R.string.tempbasal_label) + ": " + rh.gs(R.string.pump_basebasalrate, absolute))
-            actions.add(rh.gs(R.string.duration) + ": " + rh.gs(R.string.format_mins, durationInMinutes))
+            actions.add(rh.gs(info.nightscout.core.ui.R.string.tempbasal_label) + ": " + rh.gs(info.nightscout.core.ui.R.string.pump_base_basal_rate, absolute))
+            actions.add(rh.gs(info.nightscout.core.ui.R.string.duration) + ": " + rh.gs(info.nightscout.core.ui.R.string.format_mins, durationInMinutes))
             if (abs(absolute - basalAbsoluteInput) > 0.01)
-                actions.add(rh.gs(R.string.constraint_applied).formatColor(context, rh, R.attr.warningColor))
+                actions.add(rh.gs(info.nightscout.core.ui.R.string.constraint_applied).formatColor(context, rh, info.nightscout.core.ui.R.attr.warningColor))
         }
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(R.string.tempbasal_label), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
+            OKDialog.showConfirmation(activity, rh.gs(info.nightscout.core.ui.R.string.tempbasal_label), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
                 val callback: Callback = object : Callback() {
                     override fun run() {
                         if (!result.success) {
-                            activityNames.runAlarm(ctx, result.comment, rh.gs(R.string.tempbasaldeliveryerror), R.raw.boluserror)
+                            uiInteraction.runAlarm(result.comment, rh.gs(info.nightscout.core.ui.R.string.temp_basal_delivery_error), info.nightscout.core.ui.R.raw.boluserror)
                         }
                     }
                 }

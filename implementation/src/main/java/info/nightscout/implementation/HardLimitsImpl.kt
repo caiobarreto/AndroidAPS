@@ -2,13 +2,10 @@ package info.nightscout.implementation
 
 import android.content.Context
 import info.nightscout.androidaps.annotations.OpenForTesting
-import info.nightscout.core.main.R
-import info.nightscout.core.toast.showToastAdNotification
-import info.nightscout.core.ui.toast.ToastUtils
 import info.nightscout.database.impl.AppRepository
 import info.nightscout.database.impl.transactions.InsertTherapyEventAnnouncementTransaction
+import info.nightscout.interfaces.ui.UiInteraction
 import info.nightscout.interfaces.utils.HardLimits
-import info.nightscout.rx.bus.RxBus
 import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.shared.interfaces.ResourceHelper
 import info.nightscout.shared.sharedPreferences.SP
@@ -23,11 +20,11 @@ import kotlin.math.min
 @Singleton
 class HardLimitsImpl @Inject constructor(
     private val aapsLogger: AAPSLogger,
-    private val rxBus: RxBus,
+    private val uiInteraction: UiInteraction,
     private val sp: SP,
     private val rh: ResourceHelper,
     private val context: Context,
-    private val repository: AppRepository
+    private val repository: AppRepository,
 ) : HardLimits {
 
     private val disposable = CompositeDisposable()
@@ -67,13 +64,13 @@ class HardLimitsImpl @Inject constructor(
 
     }
 
-    private fun loadAge(): Int = when (sp.getString(R.string.key_age, "")) {
-        rh.gs(R.string.key_child)          -> CHILD
-        rh.gs(R.string.key_teenage)        -> TEENAGE
-        rh.gs(R.string.key_adult)          -> ADULT
-        rh.gs(R.string.key_resistantadult) -> RESISTANT_ADULT
-        rh.gs(R.string.key_pregnant)       -> PREGNANT
-        else                               -> ADULT
+    private fun loadAge(): Int = when (sp.getString(info.nightscout.core.utils.R.string.key_age, "")) {
+        rh.gs(info.nightscout.core.utils.R.string.key_child)          -> CHILD
+        rh.gs(info.nightscout.core.utils.R.string.key_teenage)        -> TEENAGE
+        rh.gs(info.nightscout.core.utils.R.string.key_adult)          -> ADULT
+        rh.gs(info.nightscout.core.utils.R.string.key_resistantadult) -> RESISTANT_ADULT
+        rh.gs(info.nightscout.core.utils.R.string.key_pregnant)       -> PREGNANT
+        else                                                          -> ADULT
     }
 
     override fun maxBolus(): Double = MAX_BOLUS[loadAge()]
@@ -97,12 +94,12 @@ class HardLimitsImpl @Inject constructor(
         if (newValue < lowLimit || newValue > highLimit) {
             newValue = max(newValue, lowLimit)
             newValue = min(newValue, highLimit)
-            var msg = rh.gs(R.string.valueoutofrange, rh.gs(valueName))
+            var msg = rh.gs(info.nightscout.core.ui.R.string.valueoutofrange, rh.gs(valueName))
             msg += ".\n"
-            msg += rh.gs(R.string.valuelimitedto, value, newValue)
+            msg += rh.gs(info.nightscout.core.ui.R.string.valuelimitedto, value, newValue)
             aapsLogger.error(msg)
             disposable += repository.runTransaction(InsertTherapyEventAnnouncementTransaction(msg)).subscribe()
-            ToastUtils.showToastAdNotification(context, rxBus, msg, R.raw.error)
+            uiInteraction.showToastAndNotification(context, msg, info.nightscout.core.ui.R.raw.error)
         }
         return newValue
     }

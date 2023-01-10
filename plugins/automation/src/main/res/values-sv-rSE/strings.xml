@@ -42,7 +42,6 @@
     <string name="temptargetcomparedmmol">Temp mål %1$s %2$.1f %3$s</string>
     <string name="percentagecompared">Profil pct %1$s %2$d</string>
     <string name="iobcompared">IOB %1$s %2$.1f</string>
-    <string name="and">och</string>
     <string name="or">eller</string>
     <string name="xor">exklusivt eller</string>
     <string name="atspecifiedtime">kl %1$s</string>
@@ -118,4 +117,6 @@
     <string name="friday_short">F</string>
     <string name="saturday_short">L</string>
     <string name="sunday_short">S</string>
+    <!--    Reminders-->
+    <string name="time_to_bolus">Dags för bolus!\nKör Bolusguiden och gör beräkningar igen.</string>
 </resources>

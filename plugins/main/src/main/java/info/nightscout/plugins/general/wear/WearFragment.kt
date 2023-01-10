@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import dagger.android.support.DaggerFragment
 import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.plugins.databinding.WearFragmentBinding
-import info.nightscout.plugins.sync.nsShared.events.EventNSClientUpdateGUI
+import info.nightscout.plugins.general.wear.events.EventWearUpdateGui
 import info.nightscout.rx.AapsSchedulers
 import info.nightscout.rx.bus.RxBus
 import info.nightscout.rx.events.EventMobileToWear
@@ -48,7 +48,7 @@ class WearFragment : DaggerFragment() {
     override fun onResume() {
         super.onResume()
         disposable += rxBus
-            .toObservable(EventNSClientUpdateGUI::class.java)
+            .toObservable(EventWearUpdateGui::class.java)
             .observeOn(aapsSchedulers.main)
             .subscribe({ updateGui() }, fabricPrivacy::logException)
         updateGui()

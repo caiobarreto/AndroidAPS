@@ -11,8 +11,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import info.nightscout.androidaps.plugins.pump.common.defs.PumpHistoryEntryGroup
-import info.nightscout.androidaps.plugins.pump.common.utils.ProfileUtil
+import dagger.android.support.DaggerAppCompatActivity
 import info.nightscout.androidaps.plugins.pump.omnipod.common.definition.OmnipodCommandType
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.R
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.DashHistory
@@ -22,19 +21,24 @@ import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.History
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.InitialResult
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.ResolvedResult
 import info.nightscout.androidaps.plugins.pump.omnipod.dash.history.data.TempBasalRecord
-import info.nightscout.core.activities.NoSplashAppCompatActivity
 import info.nightscout.core.utils.DateTimeUtil
 import info.nightscout.interfaces.pump.defs.PumpType
+import info.nightscout.pump.common.defs.PumpHistoryEntryGroup
+import info.nightscout.pump.common.utils.ProfileUtil
 import info.nightscout.rx.AapsSchedulers
+import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.rx.logging.LTag
+import info.nightscout.shared.interfaces.ResourceHelper
 import java.util.Calendar
 import java.util.GregorianCalendar
 import javax.inject.Inject
 
-class DashPodHistoryActivity : NoSplashAppCompatActivity() {
+class DashPodHistoryActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var dashHistory: DashHistory
     @Inject lateinit var aapsSchedulers: AapsSchedulers
+    @Inject lateinit var aapsLogger: AAPSLogger
+    @Inject lateinit var rh: ResourceHelper
 
     private var historyTypeSpinner: Spinner? = null
     private var statusView: TextView? = null
@@ -157,7 +161,7 @@ class DashPodHistoryActivity : NoSplashAppCompatActivity() {
 
         historyTypeSpinner = findViewById(R.id.omnipod_historytype)
         typeListFull = getTypeList(PumpHistoryEntryGroup.Companion.getTranslatedList(rh))
-        val spinnerAdapter: ArrayAdapter<TypeList> = ArrayAdapter<TypeList>(this, R.layout.spinner_centered, typeListFull!!)
+        val spinnerAdapter: ArrayAdapter<TypeList> = ArrayAdapter<TypeList>(this, info.nightscout.core.ui.R.layout.spinner_centered, typeListFull!!)
         historyTypeSpinner?.run {
             adapter = spinnerAdapter
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -215,7 +219,7 @@ class DashPodHistoryActivity : NoSplashAppCompatActivity() {
         private fun setTextViewColor(check_result: Boolean, textview: TextView, record: HistoryRecord) {
             if (check_result && !record.isSuccess()) {
                 // Record says not success
-                textview.setTextColor(rh.gac(textview.context, R.attr.omniYellowColor))
+                textview.setTextColor(rh.gac(textview.context, info.nightscout.core.ui.R.attr.omniYellowColor))
                 return
             }
             // On success set color
@@ -229,23 +233,23 @@ class DashPodHistoryActivity : NoSplashAppCompatActivity() {
                 OmnipodCommandType.SUSPEND_DELIVERY,
                 OmnipodCommandType.RESUME_DELIVERY,
                 OmnipodCommandType.SET_BASAL_PROFILE -> {
-                    R.attr.omniCyanColor
+                    info.nightscout.core.ui.R.attr.omniCyanColor
                 }
                 // User action
                 OmnipodCommandType.PLAY_TEST_BEEP,
                 OmnipodCommandType.ACKNOWLEDGE_ALERTS,
                 OmnipodCommandType.CANCEL_BOLUS -> {
-                    R.attr.omniCyanColor
+                    info.nightscout.core.ui.R.attr.omniCyanColor
                 }
                 // Insulin treatment
                 OmnipodCommandType.SET_BOLUS,
                 OmnipodCommandType.SET_TEMPORARY_BASAL -> {
-                    R.attr.defaultTextColor
+                    info.nightscout.core.ui.R.attr.defaultTextColor
                 }
 
                 else ->
                     // Other
-                    R.attr.omniGrayColor
+                    info.nightscout.core.ui.R.attr.omniGrayColor
             }
             textview.setTextColor(rh.gac(textview.context, textColorAttr))
         }

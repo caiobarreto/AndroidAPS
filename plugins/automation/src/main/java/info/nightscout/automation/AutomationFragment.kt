@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.android.HasAndroidInjector
 import dagger.android.support.DaggerFragment
-import info.nightscout.interfaces.logging.UserEntryLogger
 import info.nightscout.automation.databinding.AutomationEventItemBinding
 import info.nightscout.automation.databinding.AutomationFragmentBinding
 import info.nightscout.automation.dialogs.EditEventDialog
@@ -38,6 +37,7 @@ import info.nightscout.database.entities.UserEntry.Sources
 import info.nightscout.interfaces.dragHelpers.ItemTouchHelperAdapter
 import info.nightscout.interfaces.dragHelpers.OnStartDragListener
 import info.nightscout.interfaces.dragHelpers.SimpleItemTouchHelperCallback
+import info.nightscout.interfaces.logging.UserEntryLogger
 import info.nightscout.interfaces.utils.HtmlHelper
 import info.nightscout.rx.AapsSchedulers
 import info.nightscout.rx.bus.RxBus
@@ -66,7 +66,7 @@ class AutomationFragment : DaggerFragment(), OnStartDragListener, MenuProvider {
 
     private var disposable: CompositeDisposable = CompositeDisposable()
     private lateinit var eventListAdapter: EventListAdapter
-    private lateinit var actionHelper: ActionModeHelper<AutomationEvent>
+    private lateinit var actionHelper: ActionModeHelper<AutomationEventObject>
     private val itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback())
     private var _binding: AutomationFragmentBinding? = null
 
@@ -200,9 +200,9 @@ class AutomationFragment : DaggerFragment(), OnStartDragListener, MenuProvider {
                 rh.gac(
                     context,
                     when {
-                        automation.userAction        -> R.attr.userAction
-                        automation.areActionsValid() -> R.attr.validActions
-                        else                         -> R.attr.actionsError
+                        automation.userAction        -> info.nightscout.core.ui.R.attr.userAction
+                        automation.areActionsValid() -> info.nightscout.core.ui.R.attr.validActions
+                        else                         -> info.nightscout.core.ui.R.attr.actionsError
                     }
                 )
             )
@@ -212,7 +212,7 @@ class AutomationFragment : DaggerFragment(), OnStartDragListener, MenuProvider {
             holder.binding.iconLayout.removeAllViews()
             // trigger icons
             val triggerIcons = HashSet<Int>()
-            if (automation.userAction) triggerIcons.add(R.drawable.ic_danar_useropt)
+            if (automation.userAction) triggerIcons.add(info.nightscout.core.ui.R.drawable.ic_user_options)
             fillIconSet(automation.trigger, triggerIcons)
             for (res in triggerIcons) {
                 addImage(res, holder.context, holder.binding.iconLayout)
@@ -286,17 +286,17 @@ class AutomationFragment : DaggerFragment(), OnStartDragListener, MenuProvider {
         }
     }
 
-    private fun getConfirmationText(selectedItems: SparseArray<AutomationEvent>): String {
+    private fun getConfirmationText(selectedItems: SparseArray<AutomationEventObject>): String {
         if (selectedItems.size() == 1) {
             val event = selectedItems.valueAt(0)
-            return rh.gs(R.string.removerecord) + " " + event.title
+            return rh.gs(info.nightscout.core.ui.R.string.removerecord) + " " + event.title
         }
-        return rh.gs(R.string.confirm_remove_multiple_items, selectedItems.size())
+        return rh.gs(info.nightscout.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size())
     }
 
-    private fun removeSelected(selectedItems: SparseArray<AutomationEvent>) {
+    private fun removeSelected(selectedItems: SparseArray<AutomationEventObject>) {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(R.string.removerecord), getConfirmationText(selectedItems), Runnable {
+            OKDialog.showConfirmation(activity, rh.gs(info.nightscout.core.ui.R.string.removerecord), getConfirmationText(selectedItems), Runnable {
                 selectedItems.forEach { _, event ->
                     uel.log(Action.AUTOMATION_REMOVED, Sources.Automation, event.title)
                     automationPlugin.removeAt(event.position)
@@ -311,7 +311,7 @@ class AutomationFragment : DaggerFragment(), OnStartDragListener, MenuProvider {
         actionHelper.finish()
         EditEventDialog().also {
             it.arguments = Bundle().apply {
-                putString("event", AutomationEvent(injector).toJSON())
+                putString("event", AutomationEventObject(injector).toJSON())
                 putInt("position", -1) // New event
             }
         }.show(childFragmentManager, "EditEventDialog")

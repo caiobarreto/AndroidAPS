@@ -2,10 +2,10 @@ package info.nightscout.plugins.general.overview.notifications
 
 import dagger.android.HasAndroidInjector
 import info.nightscout.interfaces.notifications.Notification
+import info.nightscout.interfaces.nsclient.NSAlarm
+import info.nightscout.interfaces.plugin.ActivePlugin
 import info.nightscout.interfaces.profile.DefaultValueHelper
 import info.nightscout.plugins.R
-import info.nightscout.plugins.sync.nsclient.NSClientPlugin
-import info.nightscout.plugins.sync.nsclient.data.NSAlarm
 import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.rx.logging.LTag
 import info.nightscout.shared.interfaces.ResourceHelper
@@ -22,7 +22,7 @@ class NotificationWithAction constructor(
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var sp: SP
     @Inject lateinit var defaultValueHelper: DefaultValueHelper
-    @Inject lateinit var nsClientPlugin: NSClientPlugin
+    @Inject lateinit var activePlugin: ActivePlugin
 
     init {
         injector.androidInjector().inject(this)
@@ -49,7 +49,7 @@ class NotificationWithAction constructor(
                 id = NS_ALARM
                 level = NORMAL
                 text = nsAlarm.title()
-                soundId = R.raw.alarm
+                soundId = info.nightscout.core.ui.R.raw.alarm
             }
 
             2 -> {
@@ -59,20 +59,21 @@ class NotificationWithAction constructor(
                 soundId = R.raw.urgentalarm
             }
         }
-        buttonText = R.string.snooze
+        buttonText = info.nightscout.core.ui.R.string.snooze
         action = Runnable {
-            nsClientPlugin.handleClearAlarm(nsAlarm, 60 * 60 * 1000L)
+            activePlugin.activeNsClient?.handleClearAlarm(nsAlarm, 60 * 60 * 1000L)
             // Adding current time to snooze if we got staleData
             aapsLogger.debug(LTag.NOTIFICATION, "Notification text is: $text")
-            val msToSnooze = sp.getInt(R.string.key_ns_alarm_stale_data_value, 15) * 60 * 1000L
+            val msToSnooze = sp.getInt(info.nightscout.core.utils.R.string.key_ns_alarm_stale_data_value, 15) * 60 * 1000L
             aapsLogger.debug(LTag.NOTIFICATION, "snooze nsalarm_staledatavalue in minutes is ${T.msecs(msToSnooze).mins()} currentTimeMillis is: ${System.currentTimeMillis()}")
-            sp.putLong(R.string.key_snoozed_to, System.currentTimeMillis() + msToSnooze)
+            sp.putLong(info.nightscout.core.utils.R.string.key_snoozed_to, System.currentTimeMillis() + msToSnooze)
         }
     }
 
-    fun action(buttonText: Int, action: Runnable) {
+    fun action(buttonText: Int, action: Runnable): NotificationWithAction {
         this.buttonText = buttonText
         this.action = action
+        return this
     }
 
 }

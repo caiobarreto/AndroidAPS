@@ -7,8 +7,8 @@ plugins {
     id 'kotlinx-serialization'
 }
 
-apply from: "${project.rootDir}/core/core-main/android_dependencies.gradle"
-apply from: "${project.rootDir}/core/core-main/android_module_dependencies.gradle"
+apply from: "${project.rootDir}/core/main/android_dependencies.gradle"
+apply from: "${project.rootDir}/core/main/android_module_dependencies.gradle"
 
 android {
 
@@ -19,6 +19,5 @@ android {
 }
 
 dependencies {
-    implementation project(':app-wear-shared:rx')
     implementation project(':app-wear-shared:shared')
 }

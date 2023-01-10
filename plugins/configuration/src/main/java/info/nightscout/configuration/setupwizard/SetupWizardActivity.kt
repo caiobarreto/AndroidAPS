@@ -6,13 +6,13 @@ import android.view.View
 import android.widget.TextView
 import dagger.android.HasAndroidInjector
 import info.nightscout.configuration.R
+import info.nightscout.configuration.activities.DaggerAppCompatActivityWithResult
 import info.nightscout.configuration.databinding.ActivitySetupwizardBinding
 import info.nightscout.configuration.setupwizard.elements.SWItem
-import info.nightscout.core.activities.NoSplashAppCompatActivity
 import info.nightscout.core.ui.dialogs.OKDialog
-import info.nightscout.core.utils.fabric.FabricPrivacy
 import info.nightscout.core.ui.locale.LocaleHelper.update
-import info.nightscout.interfaces.ui.ActivityNames
+import info.nightscout.core.utils.fabric.FabricPrivacy
+import info.nightscout.interfaces.ui.UiInteraction
 import info.nightscout.rx.AapsSchedulers
 import info.nightscout.rx.events.EventProfileStoreChanged
 import info.nightscout.rx.events.EventProfileSwitchChanged
@@ -27,14 +27,14 @@ import javax.inject.Inject
 import kotlin.math.max
 import kotlin.math.min
 
-class SetupWizardActivity : NoSplashAppCompatActivity() {
+class SetupWizardActivity : DaggerAppCompatActivityWithResult() {
 
     @Inject lateinit var injector: HasAndroidInjector
     @Inject lateinit var swDefinition: SWDefinition
     @Inject lateinit var sp: SP
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var aapsSchedulers: AapsSchedulers
-    @Inject lateinit var activityNames: ActivityNames
+    @Inject lateinit var uiInteraction: UiInteraction
 
     private val disposable = CompositeDisposable()
     private lateinit var screens: List<SWScreen>
@@ -164,7 +164,7 @@ class SetupWizardActivity : NoSplashAppCompatActivity() {
     @Suppress("UNUSED_PARAMETER")
     fun finishSetupWizard(view: View?) {
         sp.putBoolean(R.string.key_setupwizard_processed, true)
-        val intent = Intent(this, activityNames.mainActivity)
+        val intent = Intent(this, uiInteraction.mainActivity)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         startActivity(intent)
         finish()

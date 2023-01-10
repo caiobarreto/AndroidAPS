@@ -20,6 +20,7 @@
     <!--     Activities-->
     <string name="activity_monitor">Activity monitor</string>
     <string name="do_you_want_reset_stats">Do you want to reset activity stats?</string>
+    <string name="do_you_want_reset_tdd_stats">Do you want to reset TDD stats?</string>
     <string name="statistics">Statistics</string>
     <string name="calculation_in_progress">Calculation in progress</string>
     <string name="invalid_age">Invalid age entry</string>
@@ -41,15 +42,10 @@
     <string name="format_bg_isf">%1$s ISF: %2$.1f</string>
     <string name="format_cob_ic">%1$.1fg IC: %2$.1f</string>
     <string name="format_carbs_ic">%1$.0fg IC: %2$.1f</string>
-    <string name="superbolus">Superbolus</string>
     <string name="treatments_wizard_total_label">Total</string>
 
     <!-- FillDialog -->
     <string name="fill_warning">Please make sure the amount matches the specification of your infusion set!</string>
-    <string name="fill_bolus_title">Fill/Prime standard insulin amounts</string>
-    <string name="button1">Button 1</string>
-    <string name="button2">Button 2</string>
-    <string name="button3">Button 3</string>
     <string name="record_pump_site_change">Record pump site change</string>
     <string name="record_insulin_cartridge_change">Record insulin cartridge change</string>
 
@@ -140,9 +136,9 @@
     <string name="motol_default_profile">Default profile</string>
     <string name="current_profile">Current profile</string>
     <string name="available_profile">Available profile</string>
-    <string name="format_with_tdd">Age: %1$.0f TDD: %2$.0f U</string>
-    <string name="format_with_tdd_and_pct">Age: %1$.0f TDD: %2$.0f U %3$d%%</string>
-    <string name="format_with_weight">Age: %1$.0f Weight: %2$.0f kg</string>
+    <string name="format_with_tdd">Age: %1$d TDD: %2$.0f U</string>
+    <string name="format_with_tdd_and_pct">Age: %1$d TDD: %2$.0f U %3$d%%</string>
+    <string name="format_with_weight">Age: %1$d Weight: %2$.0f kg</string>
     <string name="dpv_default_profile">DPV Default profile</string>
     <string name="invalid_pct">Invalid % entry</string>
 
@@ -152,16 +148,31 @@
     <!--    BolusProgressDialog-->
     <string name="stop_pressed">STOP PRESSED</string>
 
-    <!--    PrefImport-->
-    <string name="check_preferences_details_btn">Explain import issues…</string>
-    <string name="check_preferences_details_title">Import issues details</string>
-    <string name="check_preferences_import_btn">Import</string>
-    <string name="check_preferences_import_anyway_btn">Import anyway (DANGEROUS!)</string>
-    <string name="import_setting">Import settings</string>
-    <string name="check_preferences_before_import">Please check preferences before importing:</string>
-    <string name="check_preferences_cannot_import">Preferences cannot be imported!</string>
-    <string name="check_preferences_dangerous_import">Preferences should not be imported!</string>
+    <!--QuickWizard-->
+    <string name="a11y_only_on_watch">only on watch</string>
+    <string name="a11y_only_on_phone">only on phone</string>
+    <string name="quickwizard_settings">QuickWizard settings</string>
+    <string name="overview_edit_quickwizard_button_text">Button text:</string>
+    <string name="overview_edit_quickwizard_carbs">Carbs:</string>
+    <string name="overview_edit_quickwizard_valid">Valid:</string>
+    <string name="overview_edit_quickwizard_list_activity_add">Add</string>
+    <string name="overview_quickwizard_item_edit_button">Edit</string>
+    <string name="overview_edit_quickwizard_show_on_device">Show entry on device:</string>
+    <string name="overview_edit_quickwizard_use_bg">BG calculation</string>
+    <string name="overview_edit_quickwizard_use_bolus_iob">Bolus IOB calculation</string>
+    <string name="overview_edit_quickwizard_use_basal_iob">Basal IOB calculation</string>
+    <string name="overview_edit_quickwizard_use_trend">Trend calculation</string>
+    <string name="overview_edit_quickwizard_use_superbolus">Superbolus calculation</string>
+    <string name="overview_edit_quickwizard_percentage">Percentage</string>
+    <string name="device_all">All</string>
+    <string name="device_phone">Phone</string>
+    <string name="device_watch">Watch</string>
+    <string name="positive_only">Positive only</string>
+    <string name="negative_only">Negative only</string>
+    <string name="overview_editquickwizard_usecob">COB calculation</string>
+    <string name="overview_editquickwizard_usetemptarget">Temporary target calculation</string>
+    <string name="overview_editquickwizard_usepercentage">Percentage calculation</string>
+    <string name="app_default">Application default</string>
+    <string name="a11y_drag_and_drop_handle">drag and drop handle</string>
 
-    <!--    Preferences -->
-    <string name="nav_plugin_preferences">Plugin preferences</string>
 </resources>

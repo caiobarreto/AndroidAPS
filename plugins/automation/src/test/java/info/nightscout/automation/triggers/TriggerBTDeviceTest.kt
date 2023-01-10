@@ -4,7 +4,7 @@ import com.google.common.base.Optional
 import info.nightscout.automation.elements.ComparatorConnect
 import org.json.JSONObject
 import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Suppress("SpellCheckingInspection")
 class TriggerBTDeviceTest : TriggerTestBase() {
@@ -33,7 +33,7 @@ class TriggerBTDeviceTest : TriggerTestBase() {
 
     @Test
     fun icon() {
-        Assert.assertEquals(Optional.of(info.nightscout.core.main.R.drawable.ic_bluetooth_white_48dp), TriggerBTDevice(injector).icon())
+        Assert.assertEquals(Optional.of(info.nightscout.core.ui.R.drawable.ic_bluetooth_white_48dp), TriggerBTDevice(injector).icon())
     }
 
     @Test fun duplicate() {

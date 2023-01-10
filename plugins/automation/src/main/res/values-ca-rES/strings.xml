@@ -42,7 +42,6 @@
     <string name="temptargetcomparedmmol">Objectiu Temporal %1$s %2$.1f %3$s</string>
     <string name="percentagecompared">Perfil pct %1$s %2$d</string>
     <string name="iobcompared">IOB %1$s %2$.1f</string>
-    <string name="and">I</string>
     <string name="or">O</string>
     <string name="xor">Exclusiu o</string>
     <string name="atspecifiedtime">A les %1$s</string>
@@ -118,4 +117,6 @@
     <string name="friday_short">Dv</string>
     <string name="saturday_short">Ds</string>
     <string name="sunday_short">Dg</string>
+    <!--    Reminders-->
+    <string name="time_to_bolus">Hora d’aplicar bolus!\nExecuteu l\'assistent de bolus i torneu a fer els càlculs.</string>
 </resources>

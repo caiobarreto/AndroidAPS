@@ -2,6 +2,7 @@ package info.nightscout.database.impl.transactions
 
 import info.nightscout.database.entities.GlucoseValue
 import info.nightscout.database.entities.TherapyEvent
+import info.nightscout.database.transactions.TransactionGlucoseValue
 
 /**
  * Inserts data from a CGM source into the database
@@ -23,7 +24,8 @@ class CgmSourceTransaction constructor(
                 noise = it.noise,
                 trendArrow = it.trendArrow,
                 sourceSensor = it.sourceSensor,
-                isValid = it.isValid
+                isValid = it.isValid,
+                utcOffset = it.utcOffset
             ).also { gv ->
                 gv.interfaceIDs.nightscoutId = it.nightscoutId
             }
@@ -77,17 +79,6 @@ class CgmSourceTransaction constructor(
         }
         return result
     }
-
-    data class TransactionGlucoseValue(
-        val timestamp: Long,
-        val value: Double,
-        val raw: Double?,
-        val noise: Double?,
-        val trendArrow: GlucoseValue.TrendArrow,
-        val nightscoutId: String? = null,
-        val sourceSensor: GlucoseValue.SourceSensor,
-        val isValid: Boolean = true
-    )
 
     data class Calibration(
         val timestamp: Long,
