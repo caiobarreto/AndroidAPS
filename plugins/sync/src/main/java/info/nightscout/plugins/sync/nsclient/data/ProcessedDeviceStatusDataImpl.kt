@@ -17,7 +17,6 @@ import info.nightscout.shared.utils.T
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Suppress("SpellCheckingInspection")
 @Singleton
 class ProcessedDeviceStatusDataImpl @Inject constructor(
     private val rh: ResourceHelper,
@@ -64,7 +63,7 @@ class ProcessedDeviceStatusDataImpl @Inject constructor(
             // if (pumpData.reservoirDisplayOverride != "") string.append(pumpData.reservoirDisplayOverride).append("$insulinUnit ")
             // else if (fields.contains("reservoir")) string.append(pumpData.reservoir.toInt()).append("$insulinUnit ")
             if (pumpData.isPercent) string.append(pumpData.percent).append("% ")
-            if (!pumpData.isPercent) string.append(Round.roundTo(pumpData.voltage, 0.001)).append(" ")
+            if (!pumpData.isPercent && pumpData.voltage > 0) string.append(Round.roundTo(pumpData.voltage, 0.001)).append(" ")
             string.append(dateUtil.minAgo(rh, pumpData.clock)).append(" ")
             string.append(pumpData.status).append(" ")
             //string.append(device).append(" ")
@@ -134,6 +133,7 @@ class ProcessedDeviceStatusDataImpl @Inject constructor(
 
     override val uploaderStatusSpanned: Spanned
         get() {
+            var isCharging = false
             val string = StringBuilder()
             string.append("<span style=\"color:${rh.gac(info.nightscout.core.ui.R.attr.nsTitleColor)}\">")
             string.append(rh.gs(R.string.uploader_short))
@@ -146,10 +146,12 @@ class ProcessedDeviceStatusDataImpl @Inject constructor(
                 val uploader = pair.value as ProcessedDeviceStatusData.Uploader
                 if (minBattery >= uploader.battery) {
                     minBattery = uploader.battery
+                    isCharging = uploader.isCharging ?: false
                     found = true
                 }
             }
             if (found) {
+                if (isCharging) string.append("ᴪ ")
                 string.append(minBattery)
                 string.append("%")
             }

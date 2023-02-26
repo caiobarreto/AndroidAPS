@@ -35,6 +35,7 @@ interface ProfileSource {
 
     var currentProfileIndex: Int
     fun currentProfile(): SingleProfile?
-    fun storeSettings(activity: FragmentActivity? = null)
+    fun storeSettings(activity: FragmentActivity? = null, emptyCreated: Boolean = false)
+    fun loadFromStore(store: ProfileStore)
 
 }

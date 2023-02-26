@@ -31,8 +31,8 @@
     <string name="objectives_auto_objective">Enabling automation</string>
     <string name="objectives_auto_gate">Read the docs on how automation works. Set up your first simple rules. Instead of action let AAPS display only notification. When you are sure automation is triggered at the right time replace notification by real action. (https://wiki.aaps.app/en/latest/Usage/Automation.html)</string>
     <string name="objectives_auto_learned">Automation can be a good servant but a bad master. Don\'t overuse it. Do not try to replace underlying algorithm. Test the rule with message only before use. It depends on order.</string>
-    <string name="objectives_bgavailableinns">BG available in NS</string>
-    <string name="objectives_pumpstatusavailableinns">Pump status available in NS</string>
+    <string name="objectives_bgavailableinns">BG available in NS or Tidepool</string>
+    <string name="objectives_pumpstatusavailableinns">Pump status available in NS or Tidepool</string>
     <string name="objectives_manualenacts">Manual enacts</string>
     <string name="accomplished">Accomplished: %1$s</string>
     <string name="objectives_usage_objective">Learn how to control AAPS</string>
@@ -54,7 +54,7 @@
     <string name="objectives_exam_learned_isf">You learned meaning of ISF value and how it affects amount of insulin used for BG correction.</string>
     <string name="objectives_exam_learned_ic">You learned meaning of IC value and how it affects amount of insulin needed to cover carbs.</string>
     <string name="objectives_exam_learned_hypott">Hypo temp target is used only to prevent overcorrection after hypo, when there is usually stacked negative IOB. Additional actions should be evaluated to prevent this situation again in the future.</string>
-    <string name="objectives_exam_learned_profileswitch">Using percentage doesn\'t affect targets BGs but basal, ISF and IC are adjusted to give more insulin (above 100%) or less insulin (under 100%).</string>
+    <string name="objectives_exam_learned_profileswitch">Using percentage doesn\'t affect targets BGs but basal, ISF and IC are adjusted to give more insulin (above 100%%) or less insulin (under 100%%).</string>
     <string name="objectives_exam_learned_profileswitchtime">By using timeshift in profile switch you can adapt circadian profile to irregularities like late wake up.</string>
     <string name="objectives_exam_learned_profileswitch4">Editing profile itself is not sufficient to make a change. You still need to do a profile switch to activate changes.</string>
     <string name="objectives_exam_learned_exercise">You should reduce amount of insulin in the body at least 1 hour before starting exercise by selecting profile under 100%.</string>

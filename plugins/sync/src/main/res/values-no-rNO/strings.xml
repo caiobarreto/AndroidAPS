@@ -28,7 +28,6 @@
     <string name="ns_client">NSClient</string>
     <string name="ns_client_short_name">NSCI</string>
     <string name="ns_client_url">URL:</string>
-    <string name="ns_client_autoscroll">Autoscroll</string>
     <string name="restart">Omstart</string>
     <string name="ns_client_internal_title">NSClient</string>
     <string name="ns_client_url_title">Nightscout URL</string>
@@ -75,9 +74,9 @@
     <string name="ns_alarm_stale_data_value_label">Advarsel ved manglende data [min]</string>
     <string name="ns_alarm_urgent_stale_data_value_label">Advarsel ved kritisk mangel på data [min]</string>
     <string name="ns_log_app_started_event">Logg app-start til NS</string>
-    <string name="ns_local_broadcasts">Aktiver kringkasting av data til andre apper (som xDrip+). Ikke aktiver dette hvis du har mer enn én AAPS eller NSClient installert!</string>
-    <string name="ns_local_broadcasts_title">Aktiver deling av data mellom apper på telefonen.</string>
     <string name="copy_existing_values">Kopiere NS innstillinger (hvis de eksisterer)?</string>
+    <string name="ns_use_ws_title">Koble til websockets</string>
+    <string name="ns_use_ws_summary">Aktivering av betingelse: hurtigere oppdateringer, mottak av alarmer og kunngjøringer og høyere batteriforbruk som ligner v1. Alle andre opplastere til NS må bruke v3 protokoll.</string>
     <!-- Tidepool -->
     <string name="summary_tidepool_username">Ditt Tidepool brukernavn, normalt din e-postadresse</string>
     <string name="title_tidepool_username">Brukernavn for innlogging</string>
@@ -100,4 +99,21 @@
     <string name="not_connected">Ikke tilkoblet</string>
     <string name="read_only">Skrivebeskyttet</string>
     <string name="working">Prosesserer</string>
+    <!-- xDrip status line -->
+    <!-- Xdrip StatusLine -->
+    <string name="xdrip">xDrip+</string>
+    <string name="xdrip_shortname">XD</string>
+    <string name="description_xdrip">Send data til xDrip+</string>
+    <string name="xdrip_status_detailed_iob_title">Vis detaljert IOB</string>
+    <string name="xdrip_status_detailed_iob_summary">Splitt IOB i bolus- og basal-IOB på klokken</string>
+    <string name="xdrip_status_show_bgi_title">Vis BGI</string>
+    <string name="xdrip_status_show_bgi_summary">Legg til BGI i statuslinje</string>
+    <string name="xdrip_status_settings">xDrip+ avansert statuslinje</string>
+    <string name="disabled_loop">Loop deaktivert</string>
+    <string name="xdrip_send_status_title">Send statuslinje til xDrip+</string>
+    <string name="xdrip_not_installed">xDrip+ ikke installert</string>
+    <string name="calibration_sent">Kalibrering sendt til xDrip+</string>
+    <string name="xdrip_local_broadcasts_summary">Send data om glukose og behandling til xDrip+. Velg datakilde \"xDrip+ Sync Følger\" og aktiver mottak av data under Innstillinger - Inter-app innstillinger - Aksepter glukose/behandlinger</string>
+    <string name="xdrip_local_broadcasts_title">Aktiver sending til xDrip+.</string>
+    <!--    DataBroadcast-->
 </resources>
