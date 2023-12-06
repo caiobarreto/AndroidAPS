@@ -5,14 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.MenuProvider
 import androidx.lifecycle.ViewModelProvider
+import app.aaps.core.utils.extensions.safeGetSerializableExtra
 import info.nightscout.androidaps.plugins.pump.eopatch.R
 import info.nightscout.androidaps.plugins.pump.eopatch.code.EventType
 import info.nightscout.androidaps.plugins.pump.eopatch.code.PatchLifecycle
@@ -22,7 +19,6 @@ import info.nightscout.androidaps.plugins.pump.eopatch.extension.replaceFragment
 import info.nightscout.androidaps.plugins.pump.eopatch.extension.takeOne
 import info.nightscout.androidaps.plugins.pump.eopatch.ui.dialogs.ProgressDialogHelper
 import info.nightscout.androidaps.plugins.pump.eopatch.ui.viewmodel.EopatchViewModel
-import info.nightscout.core.utils.extensions.safeGetSerializableExtra
 
 class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
     private var mPatchCommCheckDialog: Dialog? = null
@@ -123,20 +119,6 @@ class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
                 }
             }
         })
-        // Add menu items without overriding methods in the Activity
-        addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
-                when (menuItem.itemId) {
-                    android.R.id.home -> {
-                        onBackPressedDispatcher.onBackPressed()
-                        true
-                    }
-
-                    else              -> false
-                }
-        })
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -189,7 +171,7 @@ class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
                         if (patchStep.value?.isSafeDeactivation == true || connectionTryCnt >= 2) {
                             val cancelLabel = commCheckCancelLabel.value ?: getString(R.string.cancel)
                             val message = "${getString(R.string.patch_comm_error_during_discard_desc_2)}\n${getString(R.string.patch_communication_check_helper_2)}"
-                            mPatchCommCheckDialog = info.nightscout.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity)
+                            mPatchCommCheckDialog = app.aaps.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity)
                                 .setTitle(R.string.patch_communication_failed)
                                 .setMessage(message)
                                 .setCancelable(false)
@@ -203,7 +185,7 @@ class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
                         } else {
                             val cancelLabel = commCheckCancelLabel.value ?: getString(R.string.cancel)
                             val message = "${getString(R.string.patch_communication_check_helper_1)}\n${getString(R.string.patch_communication_check_helper_2)}"
-                            mPatchCommCheckDialog = info.nightscout.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity)
+                            mPatchCommCheckDialog = app.aaps.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity)
                                 .setTitle(R.string.patch_communication_failed)
                                 .setMessage(message)
                                 .setCancelable(false)
@@ -219,7 +201,7 @@ class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
 
                     EventType.SHOW_BONDED_DIALOG           -> {
                         dismissProgressDialog()
-                        info.nightscout.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity)
+                        app.aaps.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity)
                             .setTitle(R.string.patch_communication_succeed)
                             .setMessage(R.string.patch_communication_succeed_message)
                             .setPositiveButton(R.string.confirm) { _, _ ->
@@ -228,7 +210,7 @@ class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
                     }
 
                     EventType.SHOW_CHANGE_PATCH_DIALOG     -> {
-                        info.nightscout.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity).apply {
+                        app.aaps.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity).apply {
                             setTitle(R.string.string_discard_patch)
                             setMessage(
                                 when {
@@ -252,7 +234,7 @@ class EopatchActivity : EoBaseActivity<ActivityEopatchBinding>() {
                     // EventType.SHOW_BONDED_DIALOG           -> this@EopatchActivity.finish()
                     EventType.SHOW_DISCARD_DIALOG          -> {
                         val cancelLabel = isInAlarmHandling.takeOne(null, getString(R.string.cancel))
-                        info.nightscout.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity).apply {
+                        app.aaps.core.ui.dialogs.AlertDialogHelper.Builder(this@EopatchActivity).apply {
                             setTitle(R.string.string_discard_patch)
                             if (isBolusActive) {
                                 setMessage(R.string.patch_change_confirm_bolus_is_active_desc)

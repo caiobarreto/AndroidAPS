@@ -15,25 +15,21 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
-import androidx.core.view.MenuProvider
-import info.nightscout.core.ui.activities.TranslatedDaggerAppCompatActivity
-import info.nightscout.core.ui.toast.ToastUtils
-import info.nightscout.core.utils.extensions.safeEnable
-import info.nightscout.interfaces.pump.BlePreCheck
+import app.aaps.core.interfaces.pump.BlePreCheck
+import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
+import app.aaps.core.ui.toast.ToastUtils
+import app.aaps.core.utils.extensions.safeEnable
 import info.nightscout.pump.danars.R
 import info.nightscout.pump.danars.databinding.DanarsBlescannerActivityBinding
 import info.nightscout.pump.danars.events.EventDanaRSDeviceChange
-import info.nightscout.rx.bus.RxBus
-import info.nightscout.shared.interfaces.ResourceHelper
-import info.nightscout.shared.sharedPreferences.SP
 import java.util.regex.Pattern
 import javax.inject.Inject
 
@@ -69,21 +65,6 @@ class BLEScanActivity : TranslatedDaggerAppCompatActivity() {
         binding.bleScannerListview.emptyView = binding.bleScannerNoDevice
         binding.bleScannerListview.adapter = listAdapter
         listAdapter?.notifyDataSetChanged()
-
-        // Add menu items without overriding methods in the Activity
-        addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
-                when (menuItem.itemId) {
-                    android.R.id.home -> {
-                        onBackPressedDispatcher.onBackPressed()
-                        true
-                    }
-
-                    else              -> false
-                }
-        })
     }
 
     override fun onResume() {
@@ -93,7 +74,7 @@ class BLEScanActivity : TranslatedDaggerAppCompatActivity() {
             bluetoothAdapter?.safeEnable()
             startScan()
         } else {
-            ToastUtils.errorToast(context, context.getString(info.nightscout.core.ui.R.string.need_connect_permission))
+            ToastUtils.errorToast(context, context.getString(app.aaps.core.ui.R.string.need_connect_permission))
         }
     }
 
@@ -111,7 +92,7 @@ class BLEScanActivity : TranslatedDaggerAppCompatActivity() {
             } catch (ignore: IllegalStateException) {
             } // ignore BT not on
         } else {
-            ToastUtils.errorToast(context, context.getString(info.nightscout.core.ui.R.string.need_connect_permission))
+            ToastUtils.errorToast(context, context.getString(app.aaps.core.ui.R.string.need_connect_permission))
         }
 
     private fun stopScan() =
@@ -121,7 +102,7 @@ class BLEScanActivity : TranslatedDaggerAppCompatActivity() {
             } catch (ignore: IllegalStateException) {
             } // ignore BT not on
         } else {
-            ToastUtils.errorToast(context, context.getString(info.nightscout.core.ui.R.string.need_connect_permission))
+            ToastUtils.errorToast(context, context.getString(app.aaps.core.ui.R.string.need_connect_permission))
         }
 
     @SuppressLint("MissingPermission")
@@ -182,7 +163,7 @@ class BLEScanActivity : TranslatedDaggerAppCompatActivity() {
                     item.device.createBond()
                     rxBus.send(EventDanaRSDeviceChange())
                 } else {
-                    ToastUtils.errorToast(context, context.getString(info.nightscout.core.ui.R.string.need_connect_permission))
+                    ToastUtils.errorToast(context, context.getString(app.aaps.core.ui.R.string.need_connect_permission))
                 }
                 finish()
             }

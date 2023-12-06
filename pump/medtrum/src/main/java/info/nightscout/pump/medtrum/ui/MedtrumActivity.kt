@@ -4,15 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
-import androidx.core.view.MenuProvider
 import androidx.lifecycle.ViewModelProvider
-import info.nightscout.core.utils.extensions.safeGetSerializableExtra
+import app.aaps.core.utils.extensions.safeGetSerializableExtra
 import info.nightscout.pump.medtrum.R
 import info.nightscout.pump.medtrum.code.PatchStep
 import info.nightscout.pump.medtrum.comm.enums.MedtrumPumpState
@@ -96,20 +91,6 @@ class MedtrumActivity : MedtrumBaseActivity<ActivityMedtrumBinding>() {
                     }
                 }
             }
-        })
-        // Add menu items without overriding methods in the Activity
-        addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
-                when (menuItem.itemId) {
-                    android.R.id.home -> {
-                        onBackPressedDispatcher.onBackPressed()
-                        true
-                    }
-
-                    else              -> false
-                }
         })
     }
 

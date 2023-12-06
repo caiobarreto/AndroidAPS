@@ -4,38 +4,34 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.core.view.MenuProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import dagger.android.support.DaggerAppCompatActivity
+import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.profile.Profile.ProfileValue
+import app.aaps.core.interfaces.pump.defs.PumpType
+import app.aaps.core.interfaces.resources.ResourceHelper
 import info.nightscout.androidaps.plugins.pump.omnipod.eros.R
 import info.nightscout.androidaps.plugins.pump.omnipod.eros.definition.PodHistoryEntryType
 import info.nightscout.androidaps.plugins.pump.omnipod.eros.history.ErosHistory
 import info.nightscout.androidaps.plugins.pump.omnipod.eros.history.database.ErosHistoryRecordEntity
 import info.nightscout.androidaps.plugins.pump.omnipod.eros.util.AapsOmnipodUtil
-import info.nightscout.interfaces.profile.Profile.ProfileValue
-import info.nightscout.interfaces.pump.defs.PumpType
+import app.aaps.core.ui.activities.TranslatedDaggerAppCompatActivity
 import info.nightscout.pump.common.defs.PumpHistoryEntryGroup
 import info.nightscout.pump.common.defs.PumpHistoryEntryGroup.Companion.getTranslatedList
 import info.nightscout.pump.common.defs.TempBasalPair
 import info.nightscout.pump.common.utils.ProfileUtil.getBasalProfilesDisplayable
-import info.nightscout.rx.logging.AAPSLogger
-import info.nightscout.rx.logging.LTag
-import info.nightscout.shared.interfaces.ResourceHelper
 import java.util.Calendar
 import java.util.GregorianCalendar
 import javax.inject.Inject
 
-class ErosPodHistoryActivity : DaggerAppCompatActivity() {
+class ErosPodHistoryActivity : TranslatedDaggerAppCompatActivity() {
 
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var aapsOmnipodUtil: AapsOmnipodUtil
@@ -113,7 +109,7 @@ class ErosPodHistoryActivity : DaggerAppCompatActivity() {
         recyclerView?.adapter = recyclerViewAdapter
         statusView?.visibility = View.GONE
         typeListFull = getTypeList(getTranslatedList(rh))
-        historyTypeSpinner?.adapter = ArrayAdapter(this, info.nightscout.core.ui.R.layout.spinner_centered, typeListFull)
+        historyTypeSpinner?.adapter = ArrayAdapter(this, app.aaps.core.ui.R.layout.spinner_centered, typeListFull)
         historyTypeSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
                 if (manualChange) return
@@ -127,21 +123,6 @@ class ErosPodHistoryActivity : DaggerAppCompatActivity() {
                 filterHistory(PumpHistoryEntryGroup.All)
             }
         }
-
-        // Add menu items without overriding methods in the Activity
-        addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean =
-                when (menuItem.itemId) {
-                    android.R.id.home -> {
-                        onBackPressedDispatcher.onBackPressed()
-                        true
-                    }
-
-                    else              -> false
-                }
-        })
     }
 
     private fun getTypeList(list: List<PumpHistoryEntryGroup>): List<TypeList> {

@@ -12,9 +12,9 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
-import android.bluetooth.le.ScanFilter
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -22,15 +22,15 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import androidx.core.app.ActivityCompat
-import info.nightscout.core.ui.toast.ToastUtils
-import info.nightscout.pump.medtrum.extension.toInt
-import info.nightscout.pump.medtrum.comm.WriteCommandPackets
+import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.ui.toast.ToastUtils
 import info.nightscout.pump.medtrum.comm.ManufacturerData
 import info.nightscout.pump.medtrum.comm.ReadDataPacket
-import info.nightscout.rx.logging.AAPSLogger
-import info.nightscout.rx.logging.LTag
-import java.util.UUID
+import info.nightscout.pump.medtrum.comm.WriteCommandPackets
+import info.nightscout.pump.medtrum.extension.toInt
 import java.util.Arrays
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,7 +40,7 @@ interface BLECommCallback {
     fun onBLEDisconnected()
     fun onNotification(notification: ByteArray)
     fun onIndication(indication: ByteArray)
-    fun onSendMessageError(reason: String)
+    fun onSendMessageError(reason: String, isRetryAble: Boolean)
 }
 
 @Singleton
@@ -95,7 +95,7 @@ class BLEComm @Inject internal constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
         ) {
-            ToastUtils.errorToast(context, context.getString(info.nightscout.core.ui.R.string.need_connect_permission))
+            ToastUtils.errorToast(context, context.getString(app.aaps.core.ui.R.string.need_connect_permission))
             aapsLogger.error(LTag.PUMPBTCOMM, "missing permissions")
             return false
         }
@@ -124,7 +124,7 @@ class BLEComm @Inject internal constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
         ) {
-            ToastUtils.errorToast(context, context.getString(info.nightscout.core.ui.R.string.need_connect_permission))
+            ToastUtils.errorToast(context, context.getString(app.aaps.core.ui.R.string.need_connect_permission))
             aapsLogger.error(LTag.PUMPBTCOMM, "missing permission: $from")
             return false
         }
@@ -258,7 +258,11 @@ class BLEComm @Inject internal constructor(
                         mReadPacket?.addData(value)
                     }
                     if (mReadPacket?.allDataReceived() == true) {
-                        mReadPacket?.getData()?.let { mCallback?.onIndication(it) }
+                        if (mReadPacket?.failed() == true) {
+                            mCallback?.onSendMessageError("ReadDataPacket failed", false)
+                        } else {
+                            mReadPacket?.getData()?.let { mCallback?.onIndication(it) }
+                        }
                         mReadPacket = null
                     }
                 }
@@ -279,7 +283,7 @@ class BLEComm @Inject internal constructor(
                     }
                 }
             } else {
-                mCallback?.onSendMessageError("onCharacteristicWrite failure")
+                mCallback?.onSendMessageError("onCharacteristicWrite failure", true)
             }
         }
 
@@ -310,9 +314,7 @@ class BLEComm @Inject internal constructor(
     private fun readDescriptor(descriptor: BluetoothGattDescriptor?) {
         aapsLogger.debug(LTag.PUMPBTCOMM, "readDescriptor")
         if (mBluetoothAdapter == null || mBluetoothGatt == null || descriptor == null) {
-            aapsLogger.error("BluetoothAdapter not initialized_ERROR")
-            isConnecting = false
-            isConnected = false
+            handleNotInitialized()
             return
         }
         mBluetoothGatt?.readDescriptor(descriptor)
@@ -323,9 +325,7 @@ class BLEComm @Inject internal constructor(
         aapsLogger.debug(LTag.PUMPBTCOMM, "checkDescriptor")
         val service = getGattService()
         if (mBluetoothAdapter == null || mBluetoothGatt == null || service == null) {
-            aapsLogger.error("BluetoothAdapter not initialized_ERROR")
-            isConnecting = false
-            isConnected = false
+            handleNotInitialized()
             return
         }
         if (descriptor.value.toInt() > 0) {
@@ -352,9 +352,7 @@ class BLEComm @Inject internal constructor(
     private fun setCharacteristicNotification(characteristic: BluetoothGattCharacteristic?, enabled: Boolean) {
         aapsLogger.debug(LTag.PUMPBTCOMM, "setCharacteristicNotification")
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            aapsLogger.error("BluetoothAdapter not initialized_ERROR")
-            isConnecting = false
-            isConnected = false
+            handleNotInitialized()
             return
         }
         mBluetoothGatt?.setCharacteristicNotification(characteristic, enabled)
@@ -366,7 +364,7 @@ class BLEComm @Inject internal constructor(
                 it.value = BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
                 mBluetoothGatt?.writeDescriptor(it)
             } else {
-
+                // Do nothing
             }
         }
     }
@@ -410,16 +408,14 @@ class BLEComm @Inject internal constructor(
             writeCharacteristic(uartWriteBTGattChar, value)
         } else {
             aapsLogger.error(LTag.PUMPBTCOMM, "sendMessage error in writePacket!")
-            mCallback?.onSendMessageError("error in writePacket!")
+            mCallback?.onSendMessageError("error in writePacket!", false)
         }
     }
 
     private fun getGattService(): BluetoothGattService? {
         aapsLogger.debug(LTag.PUMPBTCOMM, "getGattService")
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            aapsLogger.error("BluetoothAdapter not initialized_ERROR")
-            isConnecting = false
-            isConnected = false
+            handleNotInitialized()
             return null
         }
         return mBluetoothGatt?.getService(UUID.fromString(SERVICE_UUID))
@@ -431,16 +427,14 @@ class BLEComm @Inject internal constructor(
     private fun writeCharacteristic(characteristic: BluetoothGattCharacteristic, data: ByteArray?) {
         handler.postDelayed({
                                 if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-                                    aapsLogger.error("BluetoothAdapter not initialized_ERROR")
-                                    isConnecting = false
-                                    isConnected = false
+                                    handleNotInitialized()
                                 } else {
                                     characteristic.value = data
                                     characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
                                     aapsLogger.debug(LTag.PUMPBTCOMM, "writeCharacteristic: ${Arrays.toString(data)}")
                                     val success = mBluetoothGatt?.writeCharacteristic(characteristic)
                                     if (success != true) {
-                                        mCallback?.onSendMessageError("Failed to write characteristic")
+                                        mCallback?.onSendMessageError("Failed to write characteristic", true)
                                     }
                                 }
                             }, WRITE_DELAY_MILLIS)
@@ -456,7 +450,7 @@ class BLEComm @Inject internal constructor(
         var uuid: String
         val gattCharacteristics = gattService.characteristics
         for (i in 0 until gattCharacteristics.size) {
-            val gattCharacteristic = gattCharacteristics.get(i)
+            val gattCharacteristic = gattCharacteristics[i]
             // Check whether read or write properties is set, the pump needs us to enable notifications on all characteristics that have these properties
             if (gattCharacteristic.properties and NEEDS_ENABLE > 0) {
                 handler.postDelayed({
@@ -471,5 +465,12 @@ class BLEComm @Inject internal constructor(
                                     }, (i * 600).toLong())
             }
         }
+    }
+
+    private fun handleNotInitialized() {
+        aapsLogger.error("BluetoothAdapter not initialized_ERROR")
+        isConnecting = false
+        isConnected = false
+        return
     }
 }
